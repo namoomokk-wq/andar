@@ -124,6 +124,7 @@ select.in:invalid, select.in.empty { color: #b9ab9c; }
 .dock { position: fixed; z-index: 30; left: 50%; bottom: 0; width: min(100%, 480px); transform: translateX(-50%); padding: 14px 20px max(18px, env(safe-area-inset-bottom)); background: linear-gradient(to top, var(--paper) 62%, rgba(247,242,235,0)); pointer-events: none; }
 .dock > * { pointer-events: auto; }
 .msg { min-height: 18px; margin: 0 4px 8px; font-size: 12.5px; font-weight: 600; color: var(--err); text-align: center; }
+.msg.info { color: inherit; opacity: .8; }
 .submit { position: relative; width: 100%; height: 60px; border: 0; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 700; font-size: 16px; letter-spacing: .02em; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 18px 36px -14px rgba(21,16,12,.6); transition: transform .3s var(--ease), box-shadow .3s; }
 .submit::before { content: ""; position: absolute; inset: 0; background: var(--grad); opacity: 0; transition: opacity .4s; }
 .submit.ready::before { opacity: 1; }

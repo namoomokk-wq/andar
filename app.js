@@ -172,7 +172,7 @@
     el.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }], { duration: 260 });
     setMsg(`세션은 최대 ${C.MAX_SESSIONS}개까지 선택할 수 있어요.`);
   }
-  function setMsg(t) { const m = document.getElementById("err"); if (m) m.textContent = t; state.error = t; }
+  function setMsg(t, info) { const m = document.getElementById("err"); if (m) { m.textContent = t; m.classList.toggle("info", !!info); } state.error = t; }
 
   function syncSelection() {
     const n = state.selected.length;
@@ -266,12 +266,40 @@
     }
   }
 
+  // 접수가 몰려 서버가 바쁠 때(락 대기 초과·네트워크 끊김)는 자동으로 다시 시도한다
+  const MAX_ATTEMPTS = 6;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const isBusy = (msg) => /서버 오류|잠금/.test(msg || "");
+
+  async function postOnce(payload) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 45000);
+    try {
+      // text/plain 으로 보내 CORS preflight를 피한다 (Apps Script 웹앱 관례)
+      const res = await fetch(C.GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: ctrl.signal });
+      return await res.json();
+    } finally { clearTimeout(timer); }
+  }
+
   async function submit(payload) {
     if (!C.GAS_URL) return mockSubmit(payload);
-    // text/plain 으로 보내 CORS preflight를 피한다 (Apps Script 웹앱 관례)
-    const res = await fetch(C.GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || "신청에 실패했어요.");
+    let unsure = false; // 응답을 못 받아서 저장됐는지 모르는 상태
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      let data = null;
+      try { data = await postOnce(payload); } catch (_) { /* 네트워크/시간초과 */ }
+
+      if (data && data.ok) return;
+      // 재시도 중 "이미 신청"이 나오면 앞선 시도가 저장된 것으로 본다
+      if (data && unsure && /이미 신청/.test(data.error || "")) return;
+      // 검증 실패 등 다시 해도 소용없는 오류는 바로 알린다
+      if (data && !isBusy(data.error)) throw new Error(data.error || "신청에 실패했어요.");
+
+      if (!data) unsure = true;
+      if (attempt === MAX_ATTEMPTS) break;
+      setMsg("접수 중이에요. 잠시만 기다려주세요.", true);
+      await sleep(2000 + Math.random() * 3000); // 동시에 재시도가 몰리지 않게 분산
+    }
+    throw new Error("접수가 몰려 처리하지 못했어요. 잠시 후 다시 시도해주세요.");
   }
 
   // GAS_URL이 없을 때: 브라우저에 저장 (시연용). 콘솔에서 localStorage.mockApplications 확인 가능
