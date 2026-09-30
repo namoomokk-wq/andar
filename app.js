@@ -13,6 +13,7 @@
     arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
     check: '<svg viewBox="0 0 12 12" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.4l2.6 2.6L10 3.4"/></svg>',
+    chevron: '<svg viewBox="0 0 14 9" fill="none"><path d="M1 1.5l6 6 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
   const mesh = () => '<div class="mesh"><i></i><i></i><i></i></div><div class="grain"></div>';
 
@@ -52,8 +53,14 @@
   }
 
   function selectField(name, label, options) {
-    const opts = options.map((o) => `<option value="${esc(o)}" ${state.form[name] === o ? "selected" : ""}>${esc(o)}</option>`).join("");
-    return `<div class="f" data-field="${name}"><label>${label}</label><select class="in ${state.form[name] ? "" : "empty"}" name="${name}"><option value="">선택</option>${opts}</select></div>`;
+    const val = state.form[name] || "";
+    const opts = options.map((o) => `<button type="button" class="dd-opt ${val === o ? "on" : ""}" data-value="${esc(o)}" role="option" aria-selected="${val === o}">${esc(o)}</button>`).join("");
+    return `<div class="f" data-field="${name}"><label>${label}</label>
+      <div class="dd">
+        <button type="button" class="in dd-btn ${val ? "" : "empty"}" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label">${val ? esc(val) : "선택"}</span><span class="dd-arrow">${ICON.chevron}</span></button>
+        <div class="dd-list" role="listbox">${opts}</div>
+      </div>
+    </div>`;
   }
   function inputField(name, label, attrs) {
     return `<div class="f" data-field="${name}"><label>${label}</label><input class="in" name="${name}" value="${esc(state.form[name] || "")}" ${attrs || ""} /></div>`;
@@ -151,11 +158,44 @@
   window.addEventListener("hashchange", route);
 
   document.addEventListener("click", (e) => {
+    const ddBtn = e.target.closest(".dd-btn");
+    const opt = e.target.closest(".dd-opt");
+    const keepOpen = ddBtn ? ddBtn.closest(".dd") : opt ? opt.closest(".dd") : null;
+    document.querySelectorAll(".dd.open").forEach((d) => { if (d !== keepOpen) closeDropdown(d); });
+    if (ddBtn) return toggleDropdown(ddBtn.closest(".dd"));
+    if (opt) return selectOption(opt);
     const go = e.target.closest("[data-go]");
     if (go) { readForm(); location.hash = go.dataset.go; return; }
     const tile = e.target.closest("[data-session]");
     if (tile) toggleSession(tile.dataset.session);
   });
+
+  function closeDropdown(dd) {
+    dd.classList.remove("open");
+    dd.querySelector(".dd-btn").setAttribute("aria-expanded", "false");
+  }
+  function toggleDropdown(dd) {
+    const open = !dd.classList.contains("open");
+    dd.classList.toggle("open", open);
+    dd.querySelector(".dd-btn").setAttribute("aria-expanded", String(open));
+  }
+  function selectOption(opt) {
+    const dd = opt.closest(".dd");
+    const field = dd.closest(".f");
+    const name = field.dataset.field;
+    const value = opt.dataset.value;
+    state.form[name] = value;
+    const btn = dd.querySelector(".dd-btn");
+    btn.querySelector(".dd-label").textContent = value;
+    btn.classList.remove("empty");
+    dd.querySelectorAll(".dd-opt").forEach((o) => {
+      const on = o.dataset.value === value;
+      o.classList.toggle("on", on);
+      o.setAttribute("aria-selected", String(on));
+    });
+    closeDropdown(dd);
+    field.classList.remove("err");
+  }
 
   // 선택 상태는 화면을 다시 그리지 않고 제자리에서 갱신 (스크롤 유지)
   function toggleSession(id) {
@@ -193,10 +233,11 @@
 
   // ---------- form ----------
   const FIELDS = ["name", "phone", "andarId", "bra", "zipup", "leggings", "shoes"];
+  const TEXT_FIELDS = ["name", "phone", "andarId"];
   function readForm() {
     const f = document.getElementById("form");
     if (!f) return;
-    FIELDS.forEach((k) => { state.form[k] = f.elements[k].value.trim(); });
+    TEXT_FIELDS.forEach((k) => { state.form[k] = f.elements[k].value.trim(); });
     state.agree = f.elements.agree.checked;
   }
   function bindApply() {
@@ -205,7 +246,6 @@
     f.addEventListener("input", (e) => {
       const fld = e.target.closest(".f");
       if (fld) fld.classList.remove("err");
-      if (e.target.tagName === "SELECT") e.target.classList.toggle("empty", !e.target.value);
       if (e.target.name === "phone") e.target.value = fmtPhone(e.target.value);
     });
   }
