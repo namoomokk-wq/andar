@@ -71,7 +71,7 @@ button { cursor: pointer; }
 .sec-h h2 { margin: 0; font: 700 12px/1 var(--display); letter-spacing: .24em; text-transform: uppercase; }
 .sec-h .aux { margin-left: auto; font-size: 12px; color: var(--mute); }
 .lead { font: 400 34px/1.08 var(--serif); margin: 26px 0 0; letter-spacing: -.01em; }
-.lead em { color: var(--orange); }
+.lead em { color: var(--orange); font-style: normal; }
 .lead-sub { margin: 10px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.65; }
 
 /* ---------- schedule ---------- */
