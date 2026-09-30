@@ -61,7 +61,19 @@
 
   function Apply() {
     return `
-      <div class="page view">
+      <div class="split view">
+      <aside class="side">
+        ${mesh()}
+        <div class="side-in">
+          <div class="bar"><span>Capsule 001</span><span>2026.10</span></div>
+          <div class="side-mark"><h2 class="word">andar</h2><div class="sub">In Motion · Special Session</div></div>
+          <div class="side-foot">
+            <div class="big">10.24 <span>—</span> 10.25</div>
+            <div class="picked" id="picked"></div>
+          </div>
+        </div>
+      </aside>
+      <div class="page main">
         <div class="top"><button class="back" data-go="/" aria-label="뒤로">${ICON.back}</button><div class="ttl">Session Application<small>ANDAR. IN MOTION</small></div></div>
         <div class="wrap">
           <h1 class="lead">함께 움직일<br /><em>세션</em>을 골라주세요</h1>
@@ -97,6 +109,7 @@
           </form>
         </div>
         <div class="dock"><p class="msg" id="err">${esc(state.error)}</p><button class="submit" id="submit" type="submit" form="form"></button></div>
+      </div>
       </div>`;
   }
 
@@ -110,7 +123,7 @@
       <div class="card">${art(m, i)}<div class="body"><h3>${esc(m.title)}</h3><p>${esc(m.text)}</p></div></div>`).join("");
     const r = C.STRETCH_YOUR_RUN;
     return `
-      <div class="page view" style="padding-bottom:48px">
+      <div class="page sessions-page view" style="padding-bottom:48px">
         <div class="top"><button class="back" data-go="/apply" aria-label="뒤로">${ICON.back}</button><div class="ttl">Special Session<small>ANDAR. IN MOTION</small></div></div>
         <div class="wrap">
           <div class="banner">${mesh()}<div class="k">10.24 — 10.25</div><h1>Move with<br /><em>andar</em></h1></div>
@@ -176,6 +189,12 @@
     const n = state.selected.length;
     const c = document.getElementById("count");
     if (c) c.textContent = `${n} / ${C.MAX_SESSIONS} 선택`;
+    const p = document.getElementById("picked");
+    if (p) {
+      p.innerHTML = n
+        ? state.selected.map((s) => { const [date, time, ...name] = s.split(" "); return `<div>${esc(name.join(" "))}<span>${esc(date)} · ${esc(time)}</span></div>`; }).join("")
+        : `<p>오른쪽에서 참여할 세션을<br />최대 ${C.MAX_SESSIONS}개 선택해주세요</p>`;
+    }
     renderSubmit();
   }
   function renderSubmit() {
