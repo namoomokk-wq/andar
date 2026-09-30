@@ -62,17 +62,6 @@
   function Apply() {
     return `
       <div class="split view">
-      <aside class="side">
-        ${mesh()}
-        <div class="side-in">
-          <div class="bar"><span>Capsule 001</span><span>2026.10</span></div>
-          <div class="side-mark"><h2 class="word">andar</h2><div class="sub">In Motion · Special Session</div></div>
-          <div class="side-foot">
-            <div class="big">10.24 <span>—</span> 10.25</div>
-            <div class="picked" id="picked"></div>
-          </div>
-        </div>
-      </aside>
       <div class="page main">
         <div class="top"><button class="back" data-go="/" aria-label="뒤로">${ICON.back}</button><div class="ttl">Session Application<small>ANDAR. IN MOTION</small></div></div>
         <div class="wrap">
@@ -189,12 +178,6 @@
     const n = state.selected.length;
     const c = document.getElementById("count");
     if (c) c.textContent = `${n} / ${C.MAX_SESSIONS} 선택`;
-    const p = document.getElementById("picked");
-    if (p) {
-      p.innerHTML = n
-        ? state.selected.map((s) => { const [date, time, ...name] = s.split(" "); return `<div>${esc(name.join(" "))}<span>${esc(date)} · ${esc(time)}</span></div>`; }).join("")
-        : `<p>오른쪽에서 참여할 세션을<br />최대 ${C.MAX_SESSIONS}개 선택해주세요</p>`;
-    }
     renderSubmit();
   }
   function renderSubmit() {
