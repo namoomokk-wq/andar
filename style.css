@@ -83,7 +83,7 @@ button { cursor: pointer; }
 .slot { display: grid; grid-template-columns: 58px 1fr 1fr; gap: 8px; align-items: stretch; }
 .time { display: grid; place-content: center; text-align: center; font: 600 13px/1 var(--display); letter-spacing: .02em; color: var(--ink-2); }
 .time small { display: block; margin-top: 5px; font-weight: 500; font-size: 9px; letter-spacing: .22em; color: var(--mute); }
-.tile { position: relative; min-height: 74px; padding: 12px 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); text-align: center; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+.tile { position: relative; min-height: 74px; padding: 12px 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); text-align: center; overflow: hidden; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; gap: 8px;
   font: 700 11.5px/1.25 var(--display); letter-spacing: .04em; text-transform: uppercase; transition: transform .35s var(--ease), background .35s, color .35s, border-color .35s, box-shadow .35s, opacity .3s; }
 .tile:active { transform: scale(.96); }
 .tile .chk { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; transition: all .35s var(--ease); }
