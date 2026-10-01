@@ -82,6 +82,7 @@
           </section>
 
           <form id="form" novalidate>
+            <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" />
             <section class="sec">
               <div class="sec-h"><span class="no">02</span><h2>Information</h2></div>
               <div class="form">
@@ -240,10 +241,12 @@
     const f = document.getElementById("form");
     if (!f) return;
     TEXT_FIELDS.forEach((k) => { state.form[k] = f.elements[k].value.trim(); });
+    state.trap = f.elements.website ? f.elements.website.value : "";
     state.agree = f.elements.agree.checked;
   }
   function bindApply() {
     const f = document.getElementById("form");
+    if (!state.openedAt) state.openedAt = Date.now();
     f.addEventListener("submit", onSubmit);
     f.addEventListener("input", (e) => {
       const fld = e.target.closest(".f");
@@ -297,9 +300,11 @@
         leggings: state.form.leggings,
         shoes: state.form.shoes,
         agreed: true,
+        website: state.trap || "",
+        elapsed: Math.round((Date.now() - (state.openedAt || Date.now())) / 1000),
       });
       state.lastChosen = state.selected.slice();
-      state.selected = []; state.form = {}; state.agree = false; state.submitting = false;
+      state.selected = []; state.form = {}; state.agree = false; state.submitting = false; state.openedAt = 0;
       location.hash = "/done";
     } catch (err) {
       state.submitting = false;

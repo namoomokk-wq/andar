@@ -4,6 +4,14 @@
  */
 var SHEET_NAME = "신청";
 var MAX_SESSIONS = 2;
+var MIN_ELAPSED_SEC = 3;
+var SESSION_NAMES = ["STRETCH YOUR CITY", "MUSIC FLOW YOGA", "MOTION PILATES", "BOOT CAMP", "BURN BARRE", "K-SOUND BATH"];
+var SIZES = {
+  bra: ["XS", "S", "M", "L", "XL"],
+  zipup: ["XS", "S", "M", "L", "XL"],
+  leggings: ["숏 XS", "숏 S", "숏 M", "숏 L", "숏 XL", "레귤러 XS", "레귤러 S", "레귤러 M", "레귤러 L", "레귤러 XL", "롱 XS", "롱 S", "롱 M", "롱 L", "롱 XL"],
+  shoes: ["225", "230", "235", "240", "245", "250", "255", "260", "265", "270", "275", "280"]
+};
 var HEADERS = ["접수시각", "성함", "연락처", "안다르 아이디", "세션1", "세션2", "브라탑", "집업", "레깅스", "신발", "동의"];
 
 function doPost(e) {
@@ -11,6 +19,9 @@ function doPost(e) {
   try {
     lock.waitLock(20000); // 오픈 직후 동시 접수 대비
     var d = JSON.parse(e.postData.contents);
+
+    // 봇 의심(허니팟 입력·너무 빠른 제출)은 저장하지 않고 성공처럼 응답
+    if (d.website || (typeof d.elapsed === "number" && d.elapsed < MIN_ELAPSED_SEC)) return out({ ok: true });
 
     var required = ["name", "phone", "andarId", "bra", "zipup", "leggings", "shoes"];
     for (var i = 0; i < required.length; i++) {
@@ -20,6 +31,14 @@ function doPost(e) {
     if (!/^01[016789]\d{7,8}$/.test(phone)) return out({ ok: false, error: "연락처 형식을 확인해주세요." });
     var sessions = d.sessions || [];
     if (sessions.length < 1 || sessions.length > MAX_SESSIONS) return out({ ok: false, error: "세션은 1~" + MAX_SESSIONS + "개 선택해주세요." });
+    if (String(d.name).length > 30 || String(d.andarId).length > 50) return out({ ok: false, error: "입력 길이를 확인해주세요." });
+    for (var s = 0; s < sessions.length; s++) {
+      if (SESSION_NAMES.indexOf(sessions[s]) < 0 || sessions.indexOf(sessions[s]) !== s) return out({ ok: false, error: "세션 선택을 확인해주세요." });
+    }
+    var sizeKeys = ["bra", "zipup", "leggings", "shoes"];
+    for (var k = 0; k < sizeKeys.length; k++) {
+      if (SIZES[sizeKeys[k]].indexOf(String(d[sizeKeys[k]])) < 0) return out({ ok: false, error: "사이즈 선택을 확인해주세요." });
+    }
     if (d.agreed !== true) return out({ ok: false, error: "개인정보 수집·이용 동의가 필요해요." });
 
     var sheet = getSheet();
@@ -32,7 +51,7 @@ function doPost(e) {
     }
 
     // 연락처는 앞자리 0이 사라지지 않도록 텍스트로 저장
-    sheet.appendRow([new Date(), d.name, "'" + phone, d.andarId, sessions[0] || "", sessions[1] || "", d.bra, d.zipup, d.leggings, d.shoes, "Y"]);
+    sheet.appendRow([new Date(), safe(d.name), "'" + phone, safe(d.andarId), sessions[0] || "", sessions[1] || "", d.bra, d.zipup, d.leggings, d.shoes, "Y"]);
     return out({ ok: true });
   } catch (err) {
     return out({ ok: false, error: "서버 오류: " + err });
@@ -54,6 +73,12 @@ function getSheet() {
     sheet.setFrozenRows(1);
   }
   return sheet;
+}
+
+// 시트에서 수식으로 실행되지 않도록 = + - @ 로 시작하는 값 앞에 ' 를 붙인다
+function safe(v) {
+  v = String(v).trim();
+  return /^[=+\-@]/.test(v) ? "'" + v : v;
 }
 
 function out(obj) {
