@@ -5,7 +5,21 @@
 var SHEET_NAME = "신청";
 var MAX_SESSIONS = 2;
 var MIN_ELAPSED_SEC = 3;
-var SESSION_NAMES = ["STRETCH YOUR CITY", "MUSIC FLOW YOGA", "MOTION PILATES", "BOOT CAMP", "BURN BARRE", "K-SOUND BATH"];
+// 시간표 (config.js의 DATES / SCHEDULE과 동일하게 유지). 사이트가 보내는 세션 값은 "날짜 시간 세션명" 형식
+var DATES = ["10/24", "10/25"];
+var SCHEDULE = [
+  { time: "10:30", sessions: ["STRETCH YOUR CITY", "STRETCH YOUR CITY"] },
+  { time: "10:30", sessions: ["MUSIC FLOW YOGA", "MOTION PILATES"] },
+  { time: "14:00", sessions: ["BOOT CAMP", "BURN BARRE"] },
+  { time: "19:30", sessions: ["K-SOUND BATH", "K-SOUND BATH"] }
+];
+var VALID_SESSIONS = (function () {
+  var list = [];
+  SCHEDULE.forEach(function (row) {
+    row.sessions.forEach(function (name, i) { list.push(DATES[i] + " " + row.time + " " + name); });
+  });
+  return list;
+})();
 var SIZES = {
   bra: ["XS", "S", "M", "L", "XL"],
   zipup: ["XS", "S", "M", "L", "XL"],
@@ -33,7 +47,7 @@ function doPost(e) {
     if (sessions.length < 1 || sessions.length > MAX_SESSIONS) return out({ ok: false, error: "세션은 1~" + MAX_SESSIONS + "개 선택해주세요." });
     if (String(d.name).length > 30 || String(d.andarId).length > 50) return out({ ok: false, error: "입력 길이를 확인해주세요." });
     for (var s = 0; s < sessions.length; s++) {
-      if (SESSION_NAMES.indexOf(sessions[s]) < 0 || sessions.indexOf(sessions[s]) !== s) return out({ ok: false, error: "세션 선택을 확인해주세요." });
+      if (VALID_SESSIONS.indexOf(sessions[s]) < 0 || sessions.indexOf(sessions[s]) !== s) return out({ ok: false, error: "세션 선택을 확인해주세요." });
     }
     var sizeKeys = ["bra", "zipup", "leggings", "shoes"];
     for (var k = 0; k < sizeKeys.length; k++) {
