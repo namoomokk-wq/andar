@@ -125,8 +125,8 @@ button { cursor: pointer; }
 .agree { display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-radius: 18px; background: rgba(255,106,26,.07); border: 1px solid rgba(255,106,26,.18); font-size: 12.5px; line-height: 1.6; color: var(--ink-2); cursor: pointer; }
 .agree input { position: absolute; opacity: 0; pointer-events: none; }
 .agree .box { flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 7px; border: 1.5px solid #d6a985; background: #fff; display: grid; place-items: center; transition: all .3s var(--ease); }
-.agree .box svg { width: 12px; height: 12px; stroke: #fff; opacity: 0; transform: scale(.4); transition: all .3s var(--ease); }
-.agree input:checked + .box { background: var(--grad); border-color: transparent; }
+.agree .box svg { display: block; width: 12px; height: 12px; stroke: #fff; opacity: 0; transform: scale(.4); transition: all .3s var(--ease); }
+.agree input:checked + .box { background: #ff6a1a; border-color: #ff6a1a; }
 .agree input:checked + .box svg { opacity: 1; transform: none; }
 .agree b { color: var(--ink); }
 
