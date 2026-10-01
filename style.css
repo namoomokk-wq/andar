@@ -87,10 +87,10 @@ button { cursor: pointer; }
   font: 700 11.5px/1.25 var(--display); letter-spacing: .04em; text-transform: uppercase; transition: transform .35s var(--ease), background .35s, color .35s, border-color .35s, box-shadow .35s, opacity .3s; }
 .tile:active { transform: scale(.96); }
 .tile .chk { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; transition: all .35s var(--ease); }
-.tile .chk svg { width: 11px; height: 11px; stroke: #fff; opacity: 0; transform: scale(.4); transition: all .35s var(--ease); }
+.tile .chk svg { display: block; width: 11px; height: 11px; background: none; stroke: #fff; opacity: 0; transform: scale(.4); transition: all .35s var(--ease); }
 .tile.on { background: linear-gradient(150deg, #2b160c 0%, #15100c 60%); color: #fff; border-color: transparent; box-shadow: 0 14px 30px -12px rgba(255,106,26,.55), inset 0 0 0 1px rgba(255,160,70,.35); transform: translateY(-2px); }
 .tile.on::before { content: ""; position: absolute; inset: -30% -30% auto auto; width: 90%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255,120,30,.55), transparent 68%); }
-.tile.on .chk { background: var(--grad); border-color: transparent; }
+.tile.on .chk { background: #ff6a1a; border-color: #ff6a1a; box-shadow: none; }
 .tile.on .chk svg { opacity: 1; transform: none; }
 .tile.dim { opacity: .38; }
 .tile > span { position: relative; }

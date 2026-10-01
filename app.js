@@ -210,9 +210,11 @@
   function shake() {
     const el = document.getElementById("tiles");
     el.animate([{ transform: "translateX(0)" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }], { duration: 260 });
-    setMsg(`세션은 최대 ${C.MAX_SESSIONS}개까지 선택할 수 있어요.`);
+    flashMsg(`세션은 최대 ${C.MAX_SESSIONS}개까지 선택할 수 있어요.`);
   }
+  let msgTimer;
   function setMsg(t, info) { const m = document.getElementById("err"); if (m) { m.textContent = t; m.classList.toggle("info", !!info); } state.error = t; }
+  function flashMsg(t) { clearTimeout(msgTimer); setMsg(t); msgTimer = setTimeout(() => setMsg(""), 2000); }
 
   function syncSelection() {
     const n = state.selected.length;
