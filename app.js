@@ -214,8 +214,15 @@
     flashMsg(`세션은 최대 ${C.MAX_SESSIONS}개까지 선택할 수 있어요.`);
   }
   let msgTimer;
-  function setMsg(t, info) { const m = document.getElementById("err"); if (m) { m.textContent = t; m.classList.toggle("info", !!info); } state.error = t; }
-  function flashMsg(t) { clearTimeout(msgTimer); setMsg(t); msgTimer = setTimeout(() => setMsg(""), 2000); }
+  // 경고 메시지는 2초 뒤 자동으로 사라진다 (진행 안내인 info 메시지는 유지)
+  function setMsg(t, info) {
+    clearTimeout(msgTimer);
+    const m = document.getElementById("err");
+    if (m) { m.textContent = t; m.classList.toggle("info", !!info); }
+    state.error = t;
+    if (t && !info) msgTimer = setTimeout(() => setMsg(""), 2000);
+  }
+  const flashMsg = (t) => setMsg(t);
 
   function syncSelection() {
     const n = state.selected.length;
