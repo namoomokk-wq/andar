@@ -3,8 +3,14 @@ window.APP_CONFIG = {
   // Google Apps Script 웹앱 URL (gas/README.md 참고). 비워두면 mock 모드(브라우저 localStorage에 저장)로 동작합니다.
   GAS_URL: "https://script.google.com/macros/s/AKfycbyO-Dy0yDqlmeddPecLY282XrCAH4SDUElwa5KW6MlxzMrucCj4I8OPTrA6pbImtANHJA/exec",
 
-  ANNOUNCE_DATE: "10/15(목)",
+  ANNOUNCE_DATE: "10/16(금)",
   MAX_SESSIONS: 2,
+
+  // 1P 행사 정보
+  EVENT: { period: "2026.10.24(토) ~ 2026.10.25(일)", place: "Y173 - 성수동 연무장17길 3" },
+
+  // 사이즈표 이미지 경로 (10/7 확정 전달 예정). 비워두면 안내 문구가 표시됩니다.
+  SIZE_CHART_IMAGE: "",
 
   // 시간표: 행 = 시간대, 열 = 날짜. 각 셀은 세션명.
   DATES: ["10/24", "10/25"],
@@ -37,6 +43,16 @@ window.APP_CONFIG = {
   STRETCH_YOUR_RUN: {
     subtitle: "트레이닝 + 슬로우조깅",
     text: "가볍게 달리고, 충분히 늘리고, 함께 완주하는 러닝 세션",
+    image: "",
+  },
+  K_SOUND_BATH: {
+    subtitle: "사운드 배스",
+    text: "이미지·문구는 10/7 확정 후 전달 예정입니다.",
+    image: "",
+  },
+  SPECIAL_GIFT: {
+    subtitle: "참가자 전원 증정",
+    text: "이미지·문구는 10/7 확정 후 전달 예정입니다.",
     image: "",
   },
 };

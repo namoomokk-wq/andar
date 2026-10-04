@@ -26,7 +26,13 @@ var SIZES = {
   leggings: ["숏 XS", "숏 S", "숏 M", "숏 L", "숏 XL", "레귤러 XS", "레귤러 S", "레귤러 M", "레귤러 L", "레귤러 XL", "롱 XS", "롱 S", "롱 M", "롱 L", "롱 XL"],
   shoes: ["225", "230", "235", "240", "245", "250", "255", "260", "265", "270", "275", "280"]
 };
-var HEADERS = ["접수시각", "성함", "연락처", "안다르 아이디", "세션1", "세션2", "브라탑", "집업", "레깅스", "신발", "동의"];
+// 기존 열 순서(1~11열)는 유지하고 새 항목은 뒤에 추가한다 (운영 시트 호환)
+var HEADERS = ["접수시각", "성함", "연락처", "안다르 아이디", "세션1", "세션2", "브라탑", "집업", "레깅스", "신발", "동의", "인스타 아이디", "우편번호", "주소", "상세주소"];
+var COL = { phone: 3, andarId: 4, insta: 12, address: 14, detail: 15 };
+
+// 중복 비교용 정규화: safe()가 붙인 ' 접두어 제거, 공백 제거, 소문자
+function norm(v) { return String(v == null ? "" : v).replace(/^'/, "").replace(/\s/g, "").toLowerCase(); }
+function normInsta(v) { return norm(v).replace(/^@/, ""); }
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -37,7 +43,7 @@ function doPost(e) {
     // 봇 의심(허니팟 입력·너무 빠른 제출)은 저장하지 않고 성공처럼 응답
     if (d.website || (typeof d.elapsed === "number" && d.elapsed < MIN_ELAPSED_SEC)) return out({ ok: true });
 
-    var required = ["name", "phone", "andarId", "bra", "zipup", "leggings", "shoes"];
+    var required = ["name", "phone", "andarId", "bra", "zipup", "leggings", "shoes", "zip", "address", "addressDetail"];
     for (var i = 0; i < required.length; i++) {
       if (!d[required[i]] || String(d[required[i]]).trim() === "") return out({ ok: false, error: "필수 항목이 비어 있어요." });
     }
@@ -45,7 +51,10 @@ function doPost(e) {
     if (!/^01[016789]\d{7,8}$/.test(phone)) return out({ ok: false, error: "연락처 형식을 확인해주세요." });
     var sessions = d.sessions || [];
     if (sessions.length < 1 || sessions.length > MAX_SESSIONS) return out({ ok: false, error: "세션은 1~" + MAX_SESSIONS + "개 선택해주세요." });
-    if (String(d.name).length > 30 || String(d.andarId).length > 50) return out({ ok: false, error: "입력 길이를 확인해주세요." });
+    var insta = d.instaId ? String(d.instaId).trim() : "";
+    if (String(d.name).length > 30 || String(d.andarId).length > 50 || insta.length > 50 ||
+        String(d.address).length > 100 || String(d.addressDetail).length > 100) return out({ ok: false, error: "입력 길이를 확인해주세요." });
+    if (!/^\d{5}$/.test(String(d.zip))) return out({ ok: false, error: "우편번호를 확인해주세요." });
     for (var s = 0; s < sessions.length; s++) {
       if (VALID_SESSIONS.indexOf(sessions[s]) < 0 || sessions.indexOf(sessions[s]) !== s) return out({ ok: false, error: "세션 선택을 확인해주세요." });
     }
@@ -58,14 +67,20 @@ function doPost(e) {
     var sheet = getSheet();
     var last = sheet.getLastRow();
     if (last > 1) {
-      var phones = sheet.getRange(2, 3, last - 1, 1).getValues();
-      for (var r = 0; r < phones.length; r++) {
-        if (String(phones[r][0]).replace(/\D/g, "") === phone) return out({ ok: false, error: "이미 신청된 연락처입니다." });
+      var rows = sheet.getRange(2, 1, last - 1, HEADERS.length).getValues();
+      var nId = norm(d.andarId), nInsta = normInsta(insta), nAddr = norm(String(d.address) + String(d.addressDetail));
+      for (var r = 0; r < rows.length; r++) {
+        var row = rows[r];
+        if (String(row[COL.phone - 1]).replace(/\D/g, "") === phone) return out({ ok: false, error: "이미 신청된 연락처입니다." });
+        if (norm(row[COL.andarId - 1]) === nId) return out({ ok: false, error: "이미 신청된 안다르 아이디입니다." });
+        if (nInsta && normInsta(row[COL.insta - 1]) === nInsta) return out({ ok: false, error: "이미 신청된 인스타 아이디입니다." });
+        if (norm(String(row[COL.address - 1]) + String(row[COL.detail - 1])) === nAddr) return out({ ok: false, error: "이미 신청된 주소입니다." });
       }
     }
 
-    // 연락처는 앞자리 0이 사라지지 않도록 텍스트로 저장
-    sheet.appendRow([new Date(), safe(d.name), "'" + phone, safe(d.andarId), sessions[0] || "", sessions[1] || "", d.bra, d.zipup, d.leggings, d.shoes, "Y"]);
+    // 연락처·우편번호는 앞자리 0이 사라지지 않도록 텍스트로 저장
+    sheet.appendRow([new Date(), safe(d.name), "'" + phone, safe(d.andarId), sessions[0] || "", sessions[1] || "", d.bra, d.zipup, d.leggings, d.shoes, "Y",
+      safe(insta), "'" + d.zip, safe(d.address), safe(d.addressDetail)]);
     return out({ ok: true });
   } catch (err) {
     return out({ ok: false, error: "서버 오류: " + err });

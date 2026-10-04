@@ -22,17 +22,16 @@
     return `
       <section class="hero view">
         ${mesh()}
-        <div class="bar"><span>Capsule 001</span><span>2026.10</span></div>
+        <div class="bar"><span></span><span></span></div>
         <div class="mark">
           <h1 class="word">andar</h1>
-          <div class="sub">In Motion · Special Session</div>
+          <div class="sub">ANDAR. IN MOTION</div>
         </div>
         <div class="foot">
           <div class="when">
-            <div class="big">10.24 <span>—</span> 10.25</div>
-            <p>움직임으로 이어지는 특별한 이틀,<br />ANDAR IN. MOTION에 초대합니다.</p>
+            <p>${esc(C.EVENT.period)}<br />${esc(C.EVENT.place)}</p>
           </div>
-          <button class="cta" data-go="/apply"><span>세션 신청</span><span class="arrow">${ICON.arrow}</span></button>
+          <button class="cta" data-go="/sessions"><span>세션 신청</span><span class="arrow">${ICON.arrow}</span></button>
         </div>
       </section>`;
   }
@@ -62,6 +61,10 @@
       </div>
     </div>`;
   }
+  // 사이즈 드롭다운 + 사이즈표 확인 버튼
+  function sizeField(name, label, options) {
+    return selectField(name, `${label}<button type="button" class="chart-btn" data-chart>* 사이즈표 확인</button>`, options);
+  }
   function inputField(name, label, attrs) {
     return `<div class="f" data-field="${name}"><label>${label}</label><input class="in" name="${name}" value="${esc(state.form[name] || "")}" ${attrs || ""} /></div>`;
   }
@@ -70,15 +73,17 @@
     return `
       <div class="split view">
       <div class="page main">
-        <div class="top"><button class="back" data-go="/" aria-label="뒤로">${ICON.back}</button><div class="ttl">Session Application<small>ANDAR. IN MOTION</small></div></div>
+        <div class="top"><button class="back" data-go="/sessions" aria-label="뒤로">${ICON.back}</button><div class="ttl">Session Application<small>ANDAR. IN MOTION</small></div></div>
         <div class="wrap">
-          <h1 class="lead">함께 움직일<br /><em>세션</em>을 골라주세요</h1>
-          <p class="lead-sub">최대 ${C.MAX_SESSIONS}개까지 선택할 수 있어요. 선택 후 정보를 입력하고 신청을 완료해주세요.</p>
+          <div class="notice">
+            <b>* 세션 신청 시 유의사항 *</b>
+            세션은 최대 ${C.MAX_SESSIONS}개까지 신청 가능하며, 최종 참가자는 세션별로 추첨을 통해 선정됩니다.<br />
+            최종 참가자에게는 ${esc(C.ANNOUNCE_DATE)} 개별 연락드릴 예정입니다.
+          </div>
 
           <section class="sec">
             <div class="sec-h"><span class="no">01</span><h2>Session</h2><span class="aux" id="count"></span></div>
             <div id="tiles">${tiles()}</div>
-            <div class="hint"><span>시간표는 언제든 바꿀 수 있어요</span><button type="button" class="link" data-go="/sessions">세션 정보 확인하기</button></div>
           </section>
 
           <form id="form" novalidate>
@@ -89,19 +94,28 @@
                 ${inputField("name", "성함", 'autocomplete="name" placeholder="홍길동"')}
                 ${inputField("phone", "연락처", 'type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel"')}
                 ${inputField("andarId", "안다르 아이디", 'autocapitalize="off" autocomplete="off" placeholder="andar_id"')}
+                ${inputField("instaId", "인스타 아이디 <em>(선택)</em>", 'autocapitalize="off" autocomplete="off" placeholder="@instagram_id"')}
               </div>
             </section>
             <section class="sec">
-              <div class="sec-h"><span class="no">03</span><h2>Size</h2><span class="aux">착용 사이즈</span></div>
+              <div class="sec-h"><span class="no">03</span><h2>Gift</h2><span class="aux">기프트 사이즈 및 배송지 정보</span></div>
               <div class="form">
-                <div class="row2">${selectField("bra", "브라탑", C.SIZES.bra)}${selectField("zipup", "집업", C.SIZES.zipup)}</div>
-                ${selectField("leggings", "레깅스 <em>기장 · 사이즈</em>", C.SIZES.leggings)}
-                ${selectField("shoes", "신발 <em>mm</em>", C.SIZES.shoes)}
+                ${sizeField("bra", "브라탑 사이즈", C.SIZES.bra)}
+                ${sizeField("zipup", "집업 사이즈", C.SIZES.zipup)}
+                ${sizeField("leggings", "레깅스 기장 및 사이즈", C.SIZES.leggings)}
+                ${sizeField("shoes", "신발 사이즈 <em>mm</em>", C.SIZES.shoes)}
+                ${inputField("zip", "우편번호", 'inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="12345"')}
+                ${inputField("address", "주소", 'autocomplete="address-line1" placeholder="도로명 주소"')}
+                ${inputField("addressDetail", "상세주소", 'autocomplete="address-line2" placeholder="동·호수 등"')}
               </div>
             </section>
             <section class="sec">
               <label class="agree"><input type="checkbox" name="agree" ${state.agree ? "checked" : ""} /><span class="box">${ICON.check}</span>
-                <span><b>[필수] 개인정보 수집·이용 동의</b><br />참가자 선정 및 안내를 위해 성함, 연락처, 안다르 아이디, 사이즈 정보를 수집하며 행사 종료 후 파기합니다.</span></label>
+                <span><b>[필수] 개인정보 수집·이용 동의</b><br />
+                · 수집 항목: 성함, 연락처, 안다르 아이디, 인스타 아이디(선택), 기프트 사이즈, 배송지(우편번호·주소)<br />
+                · 수집·이용 목적: 참가자 추첨·선정, 개별 안내, 기프트 배송<br />
+                · 보유·이용 기간: 행사 종료 후 파기<br />
+                · 동의를 거부할 수 있으나, 거부 시 세션 신청이 불가합니다.</span></label>
             </section>
           </form>
         </div>
@@ -118,17 +132,20 @@
   function Sessions() {
     const cards = C.MAIN_MOTION.map((m, i) => `
       <div class="card">${art(m, i)}<div class="body"><h3>${esc(m.title)}</h3><p>${esc(m.text)}</p></div></div>`).join("");
-    const r = C.STRETCH_YOUR_RUN;
+    const wide = (title, r) => `
+          <section class="group"><div class="group-h"><h2>${title}</h2></div>
+            <div class="cards"><div class="card wide">${art(r, 0)}<div class="body"><span class="tag">${esc(r.subtitle)}</span><h3>${title}</h3><p>${esc(r.text)}</p></div></div></div>
+          </section>`;
     return `
-      <div class="page sessions-page view" style="padding-bottom:48px">
-        <div class="top"><button class="back" data-go="/apply" aria-label="뒤로">${ICON.back}</button><div class="ttl">Special Session<small>ANDAR. IN MOTION</small></div></div>
+      <div class="page sessions-page view">
+        <div class="top"><button class="back" data-go="/" aria-label="뒤로">${ICON.back}</button><div class="ttl">ANDAR. IN MOTION<small>SPECIAL SESSION</small></div></div>
         <div class="wrap">
-          <div class="banner">${mesh()}<div class="k">10.24 — 10.25</div><h1>Move with<br /><em>andar</em></h1></div>
           <section class="group"><div class="group-h"><h2>MAIN MOTION</h2></div><div class="cards">${cards}</div></section>
-          <section class="group"><div class="group-h"><h2>STRETCH YOUR RUN</h2></div>
-            <div class="cards"><div class="card wide">${art(r, 0)}<div class="body"><span class="tag">${esc(r.subtitle)}</span><h3>STRETCH YOUR RUN</h3><p>${esc(r.text)}</p></div></div></div>
-          </section>
+          ${wide("STRETCH YOUR RUN", C.STRETCH_YOUR_RUN)}
+          ${wide("K-SOUND BATH", C.K_SOUND_BATH)}
+          ${wide("SPECIAL GIFT", C.SPECIAL_GIFT)}
         </div>
+        <div class="dock"><button class="submit ready" type="button" data-go="/apply"><span>세션 신청</span></button></div>
       </div>`;
   }
 
@@ -165,11 +182,28 @@
     document.querySelectorAll(".dd.open").forEach((d) => { if (d !== keepOpen) closeDropdown(d); });
     if (ddBtn) return toggleDropdown(ddBtn.closest(".dd"));
     if (opt) return selectOption(opt);
+    if (e.target.closest("[data-chart]")) return openChart();
+    if (e.target.id === "chart" || e.target.closest("[data-close]")) return closeChart();
     const go = e.target.closest("[data-go]");
     if (go) { readForm(); location.hash = go.dataset.go; return; }
     const tile = e.target.closest("[data-session]");
     if (tile) toggleSession(tile.dataset.session);
   });
+
+  // 사이즈표 팝업 (이미지는 config의 SIZE_CHART_IMAGE, 없으면 안내 문구)
+  function openChart() {
+    if (document.getElementById("chart")) return;
+    const body = C.SIZE_CHART_IMAGE
+      ? `<img src="${esc(C.SIZE_CHART_IMAGE)}" alt="사이즈표" />`
+      : '<p class="empty">사이즈표는 10/7 확정 후 안내될 예정입니다.</p>';
+    app.insertAdjacentHTML("beforeend", `<div class="modal" id="chart" role="dialog" aria-modal="true" aria-label="사이즈표">
+      <div class="sheet"><button type="button" class="x" data-close aria-label="닫기">×</button>${body}</div></div>`);
+  }
+  function closeChart() {
+    const m = document.getElementById("chart");
+    if (m) m.remove();
+  }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeChart(); });
 
   function closeDropdown(dd) {
     dd.classList.remove("open");
@@ -242,8 +276,8 @@
   }
 
   // ---------- form ----------
-  const FIELDS = ["name", "phone", "andarId", "bra", "zipup", "leggings", "shoes"];
-  const TEXT_FIELDS = ["name", "phone", "andarId"];
+  const FIELDS = ["name", "phone", "andarId", "bra", "zipup", "leggings", "shoes", "zip", "address", "addressDetail"];
+  const TEXT_FIELDS = ["name", "phone", "andarId", "instaId", "zip", "address", "addressDetail"];
   function readForm() {
     const f = document.getElementById("form");
     if (!f) return;
@@ -259,6 +293,7 @@
       const fld = e.target.closest(".f");
       if (fld) fld.classList.remove("err");
       if (e.target.name === "phone") e.target.value = fmtPhone(e.target.value);
+      if (e.target.name === "zip") e.target.value = e.target.value.replace(/\D/g, "").slice(0, 5);
     });
   }
 
@@ -269,13 +304,14 @@
     if (d.length < 8) return `${d.slice(0, 3)}-${d.slice(3)}`;
     return `${d.slice(0, 3)}-${d.slice(3, d.length - 4)}-${d.slice(-4)}`;
   }
-  const LABELS = { name: "성함", phone: "연락처", andarId: "안다르 아이디", bra: "브라탑 사이즈", zipup: "집업 사이즈", leggings: "레깅스 기장 및 사이즈", shoes: "신발 사이즈" };
+  const LABELS = { name: "성함", phone: "연락처", andarId: "안다르 아이디", bra: "브라탑 사이즈", zipup: "집업 사이즈", leggings: "레깅스 기장 및 사이즈", shoes: "신발 사이즈", zip: "우편번호", address: "주소", addressDetail: "상세주소" };
 
   function validate() {
     const f = state.form;
     if (state.selected.length === 0) return { scroll: "tiles", msg: "참여할 세션을 1개 이상 선택해주세요." };
     for (const k of FIELDS) if (!f[k]) return { field: k, msg: `${LABELS[k]}을(를) ${["bra", "zipup", "leggings", "shoes"].includes(k) ? "선택" : "입력"}해주세요.` };
     if (!/^01[016789]\d{7,8}$/.test(normPhone(f.phone))) return { field: "phone", msg: "연락처 형식을 확인해주세요." };
+    if (!/^\d{5}$/.test(f.zip)) return { field: "zip", msg: "우편번호 5자리를 확인해주세요." };
     if (!state.agree) return { scroll: "form", msg: "개인정보 수집·이용에 동의해주세요." };
     return null;
   }
@@ -301,6 +337,10 @@
         name: state.form.name,
         phone: normPhone(state.form.phone),
         andarId: state.form.andarId,
+        instaId: state.form.instaId || "",
+        zip: state.form.zip,
+        address: state.form.address,
+        addressDetail: state.form.addressDetail,
         sessions: state.selected,
         bra: state.form.bra,
         zipup: state.form.zipup,
@@ -360,7 +400,13 @@
   function mockSubmit(payload) {
     return new Promise((resolve, reject) => setTimeout(() => {
       const list = JSON.parse(localStorage.getItem("mockApplications") || "[]");
+      const nId = (s) => String(s || "").trim().toLowerCase();
+      const nInsta = (s) => nId(s).replace(/^@/, "");
+      const nAddr = (a) => `${a.address || ""}${a.addressDetail || ""}`.replace(/\s/g, "").toLowerCase();
       if (list.some((a) => a.phone === payload.phone)) return reject(new Error("이미 신청된 연락처입니다."));
+      if (list.some((a) => nId(a.andarId) === nId(payload.andarId))) return reject(new Error("이미 신청된 안다르 아이디입니다."));
+      if (nInsta(payload.instaId) && list.some((a) => nInsta(a.instaId) === nInsta(payload.instaId))) return reject(new Error("이미 신청된 인스타 아이디입니다."));
+      if (list.some((a) => nAddr(a) === nAddr(payload))) return reject(new Error("이미 신청된 주소입니다."));
       list.push({ ...payload, createdAt: new Date().toISOString() });
       localStorage.setItem("mockApplications", JSON.stringify(list));
       resolve();
