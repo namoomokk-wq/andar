@@ -100,6 +100,12 @@ function getSheet() {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
     sheet.setFrozenRows(1);
+  } else {
+    // 기존 시트에 새 컬럼 헤더가 없으면 1행에 자동으로 채운다 (기존 열은 건드리지 않음)
+    var cur = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+    for (var c = 0; c < HEADERS.length; c++) {
+      if (!cur[c]) sheet.getRange(1, c + 1).setValue(HEADERS[c]);
+    }
   }
   return sheet;
 }
