@@ -27,7 +27,7 @@ var SIZES = {
   shoes: ["225", "230", "235", "240", "245", "250", "255", "260", "265", "270", "275", "280"]
 };
 // 기존 열 순서(1~11열)는 유지하고 새 항목은 뒤에 추가한다 (운영 시트 호환)
-var HEADERS = ["접수시각", "성함", "연락처", "안다르 아이디", "세션1", "세션2", "브라탑", "집업", "레깅스", "신발", "동의", "인스타 아이디", "우편번호", "주소", "상세주소"];
+var HEADERS = ["접수시각", "성함", "연락처", "안다르 아이디", "세션1", "세션2", "브라탑", "집업", "레깅스", "신발", "동의", "인스타 아이디", "우편번호", "주소", "상세주소", "마케팅 동의", "제3자 제공 동의"];
 var COL = { phone: 3, andarId: 4, insta: 12, address: 14, detail: 15 };
 
 // 중복 비교용 정규화: safe()가 붙인 ' 접두어 제거, 공백 제거, 소문자
@@ -63,6 +63,7 @@ function doPost(e) {
       if (SIZES[sizeKeys[k]].indexOf(String(d[sizeKeys[k]])) < 0) return out({ ok: false, error: "사이즈 선택을 확인해주세요." });
     }
     if (d.agreed !== true) return out({ ok: false, error: "개인정보 수집·이용 동의가 필요해요." });
+    if (d.agreedMarketing !== true || d.agreedThird !== true) return out({ ok: false, error: "필수 동의 항목을 확인해주세요." });
 
     var sheet = getSheet();
     var last = sheet.getLastRow();
@@ -80,7 +81,7 @@ function doPost(e) {
 
     // 연락처·우편번호는 앞자리 0이 사라지지 않도록 텍스트로 저장
     sheet.appendRow([new Date(), safe(d.name), "'" + phone, safe(d.andarId), sessions[0] || "", sessions[1] || "", d.bra, d.zipup, d.leggings, d.shoes, "Y",
-      safe(insta), "'" + d.zip, safe(d.address), safe(d.addressDetail)]);
+      safe(insta), "'" + d.zip, safe(d.address), safe(d.addressDetail), "Y", "Y"]);
     return out({ ok: true });
   } catch (err) {
     return out({ ok: false, error: "서버 오류: " + err });

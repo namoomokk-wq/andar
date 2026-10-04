@@ -61,6 +61,14 @@
       </div>
     </div>`;
   }
+  // 동의 항목: 제목 + 내용 보기(원문 팝업) + 체크
+  function consent(name, title, doc, label) {
+    return `<div class="cons" data-field="${name}">
+      <div class="cons-h"><b>${title}</b><button type="button" class="chart-btn" data-doc="${doc}">내용 보기</button></div>
+      <label class="agree"><input type="checkbox" name="${name}" ${state[name] ? "checked" : ""} /><span class="box">${ICON.check}</span><span>${label}</span></label>
+    </div>`;
+  }
+
   // 사이즈 드롭다운 + 사이즈표 확인 버튼
   function sizeField(name, label, options) {
     return selectField(name, `${label}<button type="button" class="chart-btn" data-chart>* 사이즈표 확인</button>`, options);
@@ -104,9 +112,10 @@
                 ${sizeField("zipup", "집업 사이즈", C.SIZES.zipup)}
                 ${sizeField("leggings", "레깅스 기장 및 사이즈", C.SIZES.leggings)}
                 ${sizeField("shoes", "신발 사이즈 <em>mm</em>", C.SIZES.shoes)}
-                ${inputField("zip", "우편번호", 'inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="12345"')}
-                ${inputField("address", "주소", 'autocomplete="address-line1" placeholder="도로명 주소"')}
-                ${inputField("addressDetail", "상세주소", 'autocomplete="address-line2" placeholder="동·호수 등"')}
+                <div class="f" data-field="zip"><label>우편번호</label>
+                  <div class="zip-row"><input class="in" name="zip" value="${esc(state.form.zip || "")}" readonly placeholder="우편번호 검색 후 입력돼요" data-postcode /><button type="button" class="pc-btn" data-postcode>우편번호 검색</button></div></div>
+                <div class="f" data-field="address"><label>기본주소</label><input class="in" name="address" value="${esc(state.form.address || "")}" readonly placeholder="우편번호 검색 시 자동으로 입력돼요" data-postcode /></div>
+                ${inputField("addressDetail", "상세주소", 'autocomplete="address-line2" placeholder="동/호수 등 상세주소"')}
               </div>
             </section>
             <section class="sec">
@@ -116,6 +125,11 @@
                 · 수집·이용 목적: 참가자 추첨·선정, 개별 안내, 기프트 배송<br />
                 · 보유·이용 기간: 행사 종료 후 파기<br />
                 · 동의를 거부할 수 있으나, 거부 시 세션 신청이 불가합니다.</span></label>
+            </section>
+            <section class="sec cons-sec">
+              ${consent("agreeMkt", "마케팅 활용동의", "marketing", "네, 동의합니다")}
+              ${consent("agreeThird", "제 3자 정보제공동의", "third", "네, 동의합니다")}
+              ${consent("agreeNotice", "유의 사항 확인", "notice", "네, 확인했습니다")}
             </section>
           </form>
         </div>
@@ -145,7 +159,7 @@
           ${wide("K-SOUND BATH", C.K_SOUND_BATH)}
           ${wide("SPECIAL GIFT", C.SPECIAL_GIFT)}
         </div>
-        <div class="dock"><button class="submit ready" type="button" data-go="/apply"><span>세션 신청</span></button></div>
+        <div class="wrap"><button class="submit ready end-btn" type="button" data-go="/apply"><span>세션 신청</span></button></div>
       </div>`;
   }
 
@@ -183,7 +197,10 @@
     if (ddBtn) return toggleDropdown(ddBtn.closest(".dd"));
     if (opt) return selectOption(opt);
     if (e.target.closest("[data-chart]")) return openChart();
-    if (e.target.id === "chart" || e.target.closest("[data-close]")) return closeChart();
+    const doc = e.target.closest("[data-doc]");
+    if (doc) return openDoc(doc.dataset.doc);
+    if (e.target.closest("[data-postcode]")) return openPostcode();
+    if (e.target.id === "modal" || e.target.closest("[data-close]")) return closeModal();
     const go = e.target.closest("[data-go]");
     if (go) { readForm(); location.hash = go.dataset.go; return; }
     const tile = e.target.closest("[data-session]");
@@ -191,19 +208,62 @@
   });
 
   // 사이즈표 팝업 (이미지는 config의 SIZE_CHART_IMAGE, 없으면 안내 문구)
-  function openChart() {
-    if (document.getElementById("chart")) return;
-    const body = C.SIZE_CHART_IMAGE
-      ? `<img src="${esc(C.SIZE_CHART_IMAGE)}" alt="사이즈표" />`
-      : '<p class="empty">사이즈표는 10/7 확정 후 안내될 예정입니다.</p>';
-    app.insertAdjacentHTML("beforeend", `<div class="modal" id="chart" role="dialog" aria-modal="true" aria-label="사이즈표">
-      <div class="sheet"><button type="button" class="x" data-close aria-label="닫기">×</button>${body}</div></div>`);
+  function openModal(body, label, cls) {
+    closeModal();
+    app.insertAdjacentHTML("beforeend", `<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="${esc(label)}">
+      <div class="sheet ${cls || ""}"><button type="button" class="x" data-close aria-label="닫기">×</button>${body}</div></div>`);
   }
-  function closeChart() {
-    const m = document.getElementById("chart");
+  function closeModal() {
+    const m = document.getElementById("modal");
     if (m) m.remove();
   }
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeChart(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  function openChart() {
+    openModal(C.SIZE_CHART_IMAGE
+      ? `<img src="${esc(C.SIZE_CHART_IMAGE)}" alt="사이즈표" />`
+      : '<p class="empty">사이즈표는 10/7 확정 후 안내될 예정입니다.</p>', "사이즈표");
+  }
+  // 동의 원문 팝업 (문구는 config의 CONSENT_DOCS)
+  function openDoc(key) {
+    const d = C.CONSENT_DOCS[key];
+    if (!d) return;
+    openModal(`<h3 class="doc-t">${esc(d.title)}</h3><div class="doc-b">${esc(d.text).replace(/\n/g, "<br />")}</div>`, d.title);
+  }
+
+  // 우편번호 검색 (카카오 우편번호 서비스)
+  let postcodeLoading;
+  function loadPostcode() {
+    if (window.daum && window.daum.Postcode) return Promise.resolve();
+    if (!postcodeLoading) {
+      postcodeLoading = new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+        s.onload = resolve;
+        s.onerror = () => { postcodeLoading = null; reject(new Error("load")); };
+        document.head.appendChild(s);
+      });
+    }
+    return postcodeLoading;
+  }
+  function openPostcode() {
+    loadPostcode().then(() => {
+      openModal('<div id="postcode"></div>', "우편번호 검색", "pc");
+      new window.daum.Postcode({
+        width: "100%", height: "100%",
+        oncomplete: (d) => {
+          const f = document.getElementById("form");
+          if (!f) return;
+          f.elements.zip.value = d.zonecode;
+          f.elements.address.value = d.userSelectedType === "J" ? d.jibunAddress : d.roadAddress;
+          f.querySelectorAll('[data-field="zip"], [data-field="address"]').forEach((el) => el.classList.remove("err"));
+          readForm();
+          closeModal();
+          f.elements.addressDetail.focus();
+        },
+      }).embed(document.getElementById("postcode"));
+    }).catch(() => setMsg("주소 검색을 불러오지 못했어요. 잠시 후 다시 시도해주세요."));
+  }
 
   function closeDropdown(dd) {
     dd.classList.remove("open");
@@ -277,23 +337,25 @@
 
   // ---------- form ----------
   const FIELDS = ["name", "phone", "andarId", "bra", "zipup", "leggings", "shoes", "zip", "address", "addressDetail"];
-  const TEXT_FIELDS = ["name", "phone", "andarId", "instaId", "zip", "address", "addressDetail"];
+  const CONSENTS = ["agreeMkt", "agreeThird", "agreeNotice"]; // 모두 필수
+  const TEXT_FIELDS =["name", "phone", "andarId", "instaId", "zip", "address", "addressDetail"];
   function readForm() {
     const f = document.getElementById("form");
     if (!f) return;
     TEXT_FIELDS.forEach((k) => { state.form[k] = f.elements[k].value.trim(); });
     state.trap = f.elements.website ? f.elements.website.value : "";
     state.agree = f.elements.agree.checked;
+    CONSENTS.forEach((k) => { state[k] = f.elements[k].checked; });
   }
   function bindApply() {
     const f = document.getElementById("form");
     if (!state.openedAt) state.openedAt = Date.now();
     f.addEventListener("submit", onSubmit);
+    f.addEventListener("change", (e) => { const c = e.target.closest(".cons"); if (c) c.classList.remove("err"); });
     f.addEventListener("input", (e) => {
       const fld = e.target.closest(".f");
       if (fld) fld.classList.remove("err");
       if (e.target.name === "phone") e.target.value = fmtPhone(e.target.value);
-      if (e.target.name === "zip") e.target.value = e.target.value.replace(/\D/g, "").slice(0, 5);
     });
   }
 
@@ -313,10 +375,13 @@
     if (!/^01[016789]\d{7,8}$/.test(normPhone(f.phone))) return { field: "phone", msg: "연락처 형식을 확인해주세요." };
     if (!/^\d{5}$/.test(f.zip)) return { field: "zip", msg: "우편번호 5자리를 확인해주세요." };
     if (!state.agree) return { scroll: "form", msg: "개인정보 수집·이용에 동의해주세요." };
+    if (!state.agreeMkt) return { field: "agreeMkt", msg: "마케팅 활용에 동의해주세요." };
+    if (!state.agreeThird) return { field: "agreeThird", msg: "제 3자 정보제공에 동의해주세요." };
+    if (!state.agreeNotice) return { field: "agreeNotice", msg: "유의 사항을 확인해주세요." };
     return null;
   }
   function showError(v) {
-    document.querySelectorAll(".f.err").forEach((el) => el.classList.remove("err"));
+    document.querySelectorAll(".f.err, .cons.err").forEach((el) => el.classList.remove("err"));
     setMsg(v.msg);
     const target = v.field ? document.querySelector(`[data-field="${v.field}"]`) : document.getElementById(v.scroll);
     if (v.field) { target.classList.add("err"); void target.offsetWidth; }
@@ -347,11 +412,13 @@
         leggings: state.form.leggings,
         shoes: state.form.shoes,
         agreed: true,
+        agreedMarketing: true,
+        agreedThird: true,
         website: state.trap || "",
         elapsed: Math.round((Date.now() - (state.openedAt || Date.now())) / 1000),
       });
       state.lastChosen = state.selected.slice();
-      state.selected = []; state.form = {}; state.agree = false; state.submitting = false; state.openedAt = 0;
+      state.selected = []; state.form = {}; state.agree = false; CONSENTS.forEach((k) => { state[k] = false; }); state.submitting = false; state.openedAt = 0;
       location.hash = "/done";
     } catch (err) {
       state.submitting = false;
