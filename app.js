@@ -51,10 +51,11 @@
     return days + `<div class="slots">${rows}</div>`;
   }
 
-  function selectField(name, label, options) {
+  function selectField(name, label, options, aux) {
     const val = state.form[name] || "";
+    const head = aux ? `<div class="f-h"><label>${label}</label>${aux}</div>` : `<label>${label}</label>`;
     const opts = options.map((o) => `<button type="button" class="dd-opt ${val === o ? "on" : ""}" data-value="${esc(o)}" role="option" aria-selected="${val === o}">${esc(o)}</button>`).join("");
-    return `<div class="f" data-field="${name}"><label>${label}</label>
+    return `<div class="f" data-field="${name}">${head}
       <div class="dd">
         <button type="button" class="in dd-btn ${val ? "" : "empty"}" aria-haspopup="listbox" aria-expanded="false"><span class="dd-label">${val ? esc(val) : "선택"}</span><span class="dd-arrow">${ICON.chevron}</span></button>
         <div class="dd-list" role="listbox">${opts}</div>
@@ -71,7 +72,7 @@
 
   // 사이즈 드롭다운 + 사이즈표 확인 버튼
   function sizeField(name, label, options) {
-    return selectField(name, `${label}<button type="button" class="chart-btn" data-chart>* 사이즈표 확인</button>`, options);
+    return selectField(name, label, options, `<button type="button" class="chart-btn" data-chart>* 사이즈표 확인</button>`);
   }
   function inputField(name, label, attrs) {
     return `<div class="f" data-field="${name}"><label>${label}</label><input class="in" name="${name}" value="${esc(state.form[name] || "")}" ${attrs || ""} /></div>`;
