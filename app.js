@@ -15,7 +15,7 @@
     check: '<svg viewBox="0 0 12 12" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.4l2.6 2.6L10 3.4"/></svg>',
     chevron: '<svg viewBox="0 0 14 9" fill="none"><path d="M1 1.5l6 6 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
-  const mesh = () => '<div class="mesh"><i></i><i></i><i></i></div><div class="grain"></div>';
+  const mesh = () => '<div class="mesh kv"><img src="assets/keyvisual.png" alt="" /></div><div class="grain"></div>';
 
   // ---------- pages ----------
   function Home() {
@@ -24,7 +24,7 @@
         ${mesh()}
         <div class="bar"><span></span><span></span></div>
         <div class="mark">
-          <h1 class="word">andar</h1>
+          <h1 class="word"><img src="assets/logo.png" alt="andar" /></h1>
           <div class="sub">ANDAR. IN MOTION</div>
         </div>
         <div class="foot">
@@ -140,7 +140,7 @@
   }
 
   function art(item, i, cls) {
-    const img = item.image ? `<img src="${esc(item.image)}" alt="${esc(item.title || "")}" />` : `<div class="mesh"><i></i><i></i><i></i></div><div class="grain"></div>`;
+    const img = item.image ? `<img src="${esc(item.image)}" alt="${esc(item.title || "")}" />` : `<div class="mesh kv"><img src="assets/keyvisual.png" alt="" /></div>`;
     return `<div class="art v${(i % 4) + 1} ${cls || ""}">${img}<span class="no">${String(i + 1).padStart(2, "0")}</span></div>`;
   }
 
