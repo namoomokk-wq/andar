@@ -45,8 +45,7 @@
         const on = state.selected.includes(id);
         return `<button type="button" class="tile ${on ? "on" : full ? "dim" : ""}" data-session="${esc(id)}" aria-pressed="${on}"><span class="chk">${ICON.check}</span><span>${esc(name)}</span></button>`;
       }).join("");
-      const part = row.time < "12" ? "AM" : row.time < "17" ? "PM" : "EVE";
-      return `<div class="slot"><div class="time">${row.time}<small>${part}</small></div>${cells}</div>`;
+      return `<div class="slot"><div class="time">${row.time}<small>~ ${row.end}</small></div>${cells}</div>`;
     }).join("");
     return days + `<div class="slots">${rows}</div>`;
   }
@@ -415,6 +414,7 @@
         agreed: true,
         agreedMarketing: true,
         agreedThird: true,
+        agreedNotice: true,
         website: state.trap || "",
         elapsed: Math.round((Date.now() - (state.openedAt || Date.now())) / 1000),
       });
@@ -470,11 +470,9 @@
       const list = JSON.parse(localStorage.getItem("mockApplications") || "[]");
       const nId = (s) => String(s || "").trim().toLowerCase();
       const nInsta = (s) => nId(s).replace(/^@/, "");
-      const nAddr = (a) => `${a.address || ""}${a.addressDetail || ""}`.replace(/\s/g, "").toLowerCase();
       if (list.some((a) => a.phone === payload.phone)) return reject(new Error("이미 신청된 연락처입니다."));
       if (list.some((a) => nId(a.andarId) === nId(payload.andarId))) return reject(new Error("이미 신청된 안다르 아이디입니다."));
       if (nInsta(payload.instaId) && list.some((a) => nInsta(a.instaId) === nInsta(payload.instaId))) return reject(new Error("이미 신청된 인스타 아이디입니다."));
-      if (list.some((a) => nAddr(a) === nAddr(payload))) return reject(new Error("이미 신청된 주소입니다."));
       list.push({ ...payload, createdAt: new Date().toISOString() });
       localStorage.setItem("mockApplications", JSON.stringify(list));
       resolve();
