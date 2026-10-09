@@ -238,9 +238,14 @@
 
   // ---------- 신청 마감 ----------
   // 사용자 기기 시계가 틀려도 마감이 정확하도록 서버 응답의 Date 헤더로 시차를 보정한다 (실패 시 기기 시계 사용)
-  let clockOffset = 0;
+  // 테스트용 가상 시각: 주소 끝에 ?closed (마감 시각) 또는 ?now=2026-10-14T23:59:30+09:00 을 붙이면 그 시각부터 시간이 흐르는 것처럼 동작한다.
+  // 화면 표시만 바뀌며, 실제 접수 마감은 서버(Code.gs)가 실제 시각으로 판단한다.
+  const q = new URLSearchParams(location.search);
+  const testNow = q.has("closed") ? Date.parse(C.DEADLINE) : Date.parse((q.get("now") || "").replace(" ", "+")); // URL에서 +가 공백으로 바뀌는 것 보정
+  let clockOffset = testNow ? testNow - Date.now() : 0;
   const isClosed = () => Date.now() + clockOffset >= new Date(C.DEADLINE).getTime();
   function syncClock() {
+    if (testNow) return Promise.resolve(); // 가상 시각 사용 중에는 서버 시계로 덮어쓰지 않는다
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 1500);
     return fetch(location.pathname, { method: "HEAD", cache: "no-store", signal: ctrl.signal })
@@ -670,6 +675,16 @@
       localStorage.setItem("mockApplications", JSON.stringify(list));
       resolve();
     }, 700));
+  }
+
+  // 가상 시각 테스트 중임을 화면 구석에 표시 (현재 가상 시각이 1초마다 갱신됨)
+  if (testNow) {
+    const badge = document.createElement("div");
+    badge.className = "test-badge";
+    document.body.appendChild(badge);
+    const tick = () => { badge.textContent = `TEST ${new Date(Date.now() + clockOffset).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false })}`; };
+    tick();
+    setInterval(tick, 1000);
   }
 
   // 첫 화면(링크 접속)이면 인트로를 바로 띄운다 (마감 후에는 생략)
