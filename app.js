@@ -19,7 +19,8 @@
   const mesh = () => '<div class="mesh kv"><img src="assets/keyvisual.png" alt="" /></div><div class="grain"></div>';
 
   // ---------- pages ----------
-  function Home() {
+  // 1P: 링크로 처음 들어왔을 때 잠깐 보였다가 서서히 사라지는 인트로 (아래에 2P가 미리 그려져 있음)
+  function Splash() {
     return `
       <section class="hero view">
         ${mesh()}
@@ -32,9 +33,28 @@
           <div class="when">
             <p>${esc(C.EVENT.period)}<br />${esc(C.EVENT.place)}</p>
           </div>
-          <button class="cta" data-go="/sessions"><span>세션 신청</span><span class="arrow">${ICON.arrow}</span></button>
         </div>
       </section>`;
+  }
+  const SPLASH_MS = 2000; // 인트로 최소 표시 시간 (이후 서서히 사라짐, 탭하면 바로 넘어감)
+  function showSplash() {
+    const el = document.createElement("div");
+    el.className = "splash";
+    el.innerHTML = Splash();
+    document.body.appendChild(el);
+    document.documentElement.classList.add("splash-on");
+    const shownAt = Date.now();
+    let ready = false, skip = false, gone = false;
+    const hide = () => {
+      if (gone) return;
+      gone = true;
+      el.classList.add("out");
+      document.documentElement.classList.remove("splash-on");
+      setTimeout(() => el.remove(), 1000);
+    };
+    el.addEventListener("click", () => { skip = true; if (ready) hide(); });
+    // 아래 페이지가 준비되면 호출: 최소 표시 시간을 채운 뒤 사라진다
+    return () => { ready = true; if (skip) hide(); else setTimeout(hide, Math.max(0, SPLASH_MS - (Date.now() - shownAt))); };
   }
 
   function tiles() {
@@ -179,7 +199,6 @@
       <div class="card">${art(r, no)}<div class="body"><span class="tag">${esc(r.subtitle)}</span><b class="time">${esc(r.time)}</b><p>${esc(r.text)}</p></div></div>`;
     return `
       <div class="page sessions-page view">
-        <div class="top"><button class="back" data-go="/" aria-label="뒤로">${ICON.back}</button></div>
         <div class="wrap">
           <header class="intro">
             <h1 class="intro-logo"><img src="assets/popup-logo.png" alt="ANDAR. IN MOTION" /></h1>
@@ -242,12 +261,29 @@
   }
 
   // ---------- routing ----------
-  const routes = { "/": Home, "/apply": Apply, "/sessions": Sessions, "/done": Done };
+  const routes = { "/": Sessions, "/apply": Apply, "/sessions": Sessions, "/done": Done };
+  const currentPath = () => location.hash.replace(/^#/, "") || "/";
+
+  // 화면 전환 시 맨 위로. iOS Safari는 관성 스크롤 중이거나 스크롤 복원이 끼어들면 scrollTo를 무시하므로
+  // 관성을 끊고(overflow:hidden 잠깐) 다음 프레임까지 한 번 더 맞춘다.
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  function scrollTop() {
+    const root = document.documentElement;
+    const toTop = () => { window.scrollTo(0, 0); root.scrollTop = 0; document.body.scrollTop = 0; };
+    root.classList.add("no-scroll");
+    toTop();
+    requestAnimationFrame(() => {
+      toTop();
+      root.classList.remove("no-scroll");
+      requestAnimationFrame(toTop);
+    });
+  }
+
   function route() {
-    const path = location.hash.replace(/^#/, "") || "/";
-    if (isClosed()) { app.innerHTML = Closed(); window.scrollTo(0, 0); return; }
-    app.innerHTML = (routes[path] || Home)();
-    window.scrollTo(0, 0);
+    const path = currentPath();
+    if (isClosed()) { app.innerHTML = Closed(); scrollTop(); return; }
+    app.innerHTML = (routes[path] || Sessions)();
+    scrollTop();
     if (path === "/apply") { bindApply(); syncSelection(); }
   }
   window.addEventListener("hashchange", route);
@@ -280,8 +316,9 @@
   // 사이즈표 팝업 (이미지는 config의 SIZE_CHART_IMAGE, 없으면 안내 문구)
   function openModal(body, label, cls) {
     closeModal();
+    // 닫기 버튼은 스크롤되는 내용 바깥(박스 오른쪽 위)에 두어 항상 보이게 한다
     app.insertAdjacentHTML("beforeend", `<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="${esc(label)}">
-      <div class="sheet ${cls || ""}"><button type="button" class="x" data-close aria-label="닫기">×</button>${body}</div></div>`);
+      <div class="sheet-wrap"><button type="button" class="x" data-close aria-label="닫기">×</button><div class="sheet ${cls || ""}">${body}</div></div></div>`);
   }
   function closeModal() {
     const m = document.getElementById("modal");
@@ -635,8 +672,11 @@
     }, 700));
   }
 
+  // 첫 화면(링크 접속)이면 인트로를 바로 띄우고, 그동안 서버 시계 보정·2P 렌더링을 마친다 (마감 후에는 생략)
+  const splashDone = currentPath() === "/" && !isClosed() ? showSplash() : null;
   syncClock().then(() => {
     route();
+    if (splashDone) splashDone();
     // 페이지를 열어 둔 채 마감 시각이 지나면 종료 화면으로 전환
     setInterval(() => { if (isClosed() && !document.querySelector(".closed")) route(); }, 15000);
   });
