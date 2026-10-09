@@ -36,11 +36,33 @@ var COL = { phone: 3, andarId: 4, insta: 12 };
 function norm(v) { return String(v == null ? "" : v).replace(/^'/, "").replace(/\s/g, "").toLowerCase(); }
 function normInsta(v) { return norm(v).replace(/^@/, ""); }
 
+// 중복 확인: 연락처·안다르 아이디·인스타 아이디. 걸리면 {field, error}, 없으면 null
+function findDup(sheet, phone, andarId, insta) {
+  var last = sheet.getLastRow();
+  if (last <= 1) return null;
+  var rows = sheet.getRange(2, 1, last - 1, HEADERS.length).getValues();
+  var nId = norm(andarId), nInsta = normInsta(insta);
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r];
+    if (String(row[COL.phone - 1]).replace(/\D/g, "") === phone) return { field: "phone", error: "이미 신청된 연락처입니다." };
+    if (norm(row[COL.andarId - 1]) === nId) return { field: "andarId", error: "이미 신청된 안다르 아이디입니다." };
+    if (nInsta && normInsta(row[COL.insta - 1]) === nInsta) return { field: "instaId", error: "이미 신청된 인스타 아이디입니다." };
+  }
+  return null;
+}
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(20000); // 오픈 직후 동시 접수 대비
     var d = JSON.parse(e.postData.contents);
+
+    // 1단계 NEXT 시 중복 사전 확인 (저장하지 않음)
+    if (d.action === "check") {
+      if (new Date() >= DEADLINE) return out({ ok: false, error: "클래스 신청이 마감되었습니다." });
+      var dup0 = findDup(getSheet(), String(d.phone || "").replace(/\D/g, ""), d.andarId, d.instaId ? String(d.instaId).trim() : "");
+      return out(dup0 ? { ok: false, field: dup0.field, error: dup0.error } : { ok: true });
+    }
 
     // 봇 의심(허니팟 입력·너무 빠른 제출)은 저장하지 않고 성공처럼 응답
     if (d.website || (typeof d.elapsed === "number" && d.elapsed < MIN_ELAPSED_SEC)) return out({ ok: true });
@@ -68,17 +90,8 @@ function doPost(e) {
         (d.gender === "여" && SIZES.bra.indexOf(bra) < 0) || (hasRun && SIZES.shoes.indexOf(shoes) < 0)) return out({ ok: false, error: "사이즈 선택을 확인해주세요." });
 
     var sheet = getSheet();
-    var last = sheet.getLastRow();
-    if (last > 1) {
-      var rows = sheet.getRange(2, 1, last - 1, HEADERS.length).getValues();
-      var nId = norm(d.andarId), nInsta = normInsta(insta);
-      for (var r = 0; r < rows.length; r++) {
-        var row = rows[r];
-        if (String(row[COL.phone - 1]).replace(/\D/g, "") === phone) return out({ ok: false, error: "이미 신청된 연락처입니다." });
-        if (norm(row[COL.andarId - 1]) === nId) return out({ ok: false, error: "이미 신청된 안다르 아이디입니다." });
-        if (nInsta && normInsta(row[COL.insta - 1]) === nInsta) return out({ ok: false, error: "이미 신청된 인스타 아이디입니다." });
-      }
-    }
+    var dup = findDup(sheet, phone, d.andarId, insta);
+    if (dup) return out({ ok: false, field: dup.field, error: dup.error });
 
     // 연락처는 앞자리 0이 사라지지 않도록 텍스트로 저장
     sheet.appendRow([new Date(), safe(d.name), "'" + phone, safe(d.andarId), sessions[0] || "", sessions[1] || "", d.gender, bra, d.top, d.bottom, shoes,

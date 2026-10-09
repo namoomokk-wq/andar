@@ -444,10 +444,41 @@
       b.setAttribute("aria-pressed", String(on));
     });
   }
-  function goNext() {
+  // 연락처·안다르 아이디·인스타 아이디 중복을 NEXT 시점에 미리 확인 (네트워크 오류 시에는 통과, 최종 제출에서 한 번 더 검사)
+  async function checkDup() {
+    const f = state.form;
+    const payload = { action: "check", phone: normPhone(f.phone), andarId: f.andarId, instaId: f.instaId || "" };
+    if (!C.GAS_URL) return mockCheck(payload);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+    try {
+      const res = await fetch(C.GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload), signal: ctrl.signal });
+      const data = await res.json();
+      return data && data.ok === false && data.field ? { field: data.field, msg: data.error } : null;
+    } catch (_) { return null; } finally { clearTimeout(timer); }
+  }
+  function mockCheck(p) {
+    const list = JSON.parse(localStorage.getItem("mockApplications") || "[]");
+    const n = (v) => String(v || "").trim().toLowerCase();
+    if (list.some((a) => a.phone === p.phone)) return { field: "phone", msg: "이미 신청된 연락처입니다." };
+    if (list.some((a) => n(a.andarId) === n(p.andarId))) return { field: "andarId", msg: "이미 신청된 안다르 아이디입니다." };
+    const ni = n(p.instaId).replace(/^@/, "");
+    if (ni && list.some((a) => n(a.instaId).replace(/^@/, "") === ni)) return { field: "instaId", msg: "이미 신청된 인스타 아이디입니다." };
+    return null;
+  }
+  let checking = false;
+  async function goNext() {
+    if (checking) return;
     readForm();
     const v = validateStep1();
     if (v) return showError(v);
+    checking = true;
+    const btn = document.getElementById("next");
+    if (btn) btn.disabled = true;
+    setMsg("확인 중이에요...", true);
+    const dup = await checkDup();
+    checking = false;
+    if (dup) { if (btn) btn.disabled = false; return showError(dup); }
     setMsg("");
     state.step = 2;
     route();
