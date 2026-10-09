@@ -1,3 +1,10 @@
+/* ---------- fonts: 국문 Noto Sans KR / 영문 Helvetica Neue ---------- */
+@font-face { font-family: "Noto Sans KR"; src: url("assets/fonts/NotoSansKR-subset.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; size-adjust: 104%; }
+@font-face { font-family: "Helvetica Neue"; src: url("assets/fonts/HelveticaNeueRoman.woff2") format("woff2"); font-weight: 100 400; font-style: normal; font-display: swap; size-adjust: 108%; }
+@font-face { font-family: "Helvetica Neue"; src: url("assets/fonts/HelveticaNeueMedium.woff2") format("woff2"); font-weight: 500 700; font-style: normal; font-display: swap; size-adjust: 108%; }
+@font-face { font-family: "Helvetica Neue"; src: url("assets/fonts/HelveticaNeueBold.woff2") format("woff2"); font-weight: 800 900; font-style: normal; font-display: swap; size-adjust: 108%; }
+@font-face { font-family: "Helvetica Neue"; src: url("assets/fonts/HelveticaNeueItalic.woff2") format("woff2"); font-weight: 100 900; font-style: italic; font-display: swap; size-adjust: 108%; }
+
 :root {
   --ink: #15100c;
   --ink-2: #4a3f36;
@@ -11,12 +18,12 @@
   --deep: #1c0a04;
   --grad: linear-gradient(135deg, #ffb340 0%, #ff6a1a 48%, #b8330a 100%);
   --err: #d6336c;
-  --display: "Manrope", "Pretendard Variable", sans-serif;
-  --serif: "Instrument Serif", "Pretendard Variable", serif;
+  --display: "Helvetica Neue", "Noto Sans KR", sans-serif;
+  --serif: "Helvetica Neue", "Noto Sans KR", sans-serif;
   --ease: cubic-bezier(.2, .8, .2, 1);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; background: #0d0704; color: var(--ink); font-family: "Pretendard Variable", Pretendard, -apple-system, "Malgun Gothic", sans-serif; -webkit-font-smoothing: antialiased; }
+html, body { margin: 0; background: #0d0704; color: var(--ink); font-family: "Helvetica Neue", "Noto Sans KR", sans-serif; -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 
@@ -285,3 +292,255 @@ button { cursor: pointer; }
 .hero .mark .word { display: flex; justify-content: center; text-shadow: none; }
 .hero .mark .word img { width: min(78%, 340px); height: auto; filter: drop-shadow(0 6px 40px rgba(255,120,30,.45)); }
 @media (min-width: 900px) { .hero .mark .word img { width: clamp(300px, 28vw, 520px); } }
+
+/* ---------- 2P 클래스 페이지 (시안 반영) ---------- */
+.sessions-page { --date-size: 13px; }
+.sessions-page .top { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 0; position: absolute; left: 0; right: 0; }
+.intro { text-align: center; padding: 84px 0 6px; }
+.intro p { margin: 0; }
+.intro-logo { margin: 0 0 26px; display: flex; justify-content: center; }
+.intro-logo img { display: block; height: 58px; width: auto; filter: brightness(0); }
+.intro .when { font: 500 14px/1.7 var(--display); color: var(--ink-2); }
+.intro .lead2 { margin-top: 30px; font: 700 18px/1.5 var(--display); letter-spacing: -.02em; word-break: keep-all; }
+.intro .lead3 { margin-top: 22px; font: 700 15px/1.6 var(--display); letter-spacing: -.02em; word-break: keep-all; }
+.class-panel { margin-top: 34px; padding: 18px 14px 16px; border-radius: 26px; background: #fff7f2; border: 1px solid #f3e4da; display: grid; gap: 22px; }
+.day-tag { margin: 0 2px 10px; font: 700 var(--date-size)/1.2 var(--display); letter-spacing: -.01em; }
+.class-panel .cards { gap: 10px; }
+.class-panel .card { border-radius: 18px; }
+.class-panel .art { aspect-ratio: 1000 / 1050; }
+.class-panel .art .no { font-style: italic; font-size: 14px; }
+.card .time { display: block; font: 700 var(--date-size)/1.4 var(--display); letter-spacing: -.01em; }
+.class-panel .card .body { padding: 11px 12px 14px; }
+.class-panel .card p { margin-top: 6px; font-size: 11px; line-height: 1.55; color: var(--mute); word-break: keep-all; }
+.date-line { margin: 38px 0 14px; text-align: center; font: 700 var(--date-size)/1.2 var(--display); }
+.specials { display: grid; gap: 14px; }
+.specials .card.wide { display: grid; grid-template-columns: 1fr; border-radius: 26px; }
+.specials .card.wide .art { aspect-ratio: 1600 / 1050; }
+.specials .card.wide .body { padding: 18px 18px 22px; }
+.specials .card .tag { margin-bottom: 12px; font-size: 11px; letter-spacing: 0; }
+.specials .card .time { margin-top: 0; }
+.specials .card.wide .body p { margin-top: 10px; font-size: 12.5px; word-break: keep-all; }
+.sessions-page .wrap.end { text-align: center; }
+.deadline { margin: 26px 0 8px; font: 500 18px/1.5 var(--display); }
+@media (min-width: 960px) {
+  .sessions-page { --date-size: 15px; }
+  .sessions-page .top { padding-left: max(48px, calc((100vw - 1120px) / 2 + 48px)); }
+  .intro { padding-top: 96px; }
+  .intro-logo img { height: 84px; }
+  .intro .when { font-size: 18px; }
+  .intro .lead2 { font-size: 28px; }
+  .intro .lead3 { font-size: 22px; }
+  .class-panel { grid-template-columns: 1fr 1fr; padding: 28px; gap: 28px; }
+  .sessions-page .class-panel .cards { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .class-panel .card p { font-size: 12.5px; }
+  .date-line { margin-top: 52px; }
+  .specials { gap: 18px; }
+  .specials .card.wide { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: stretch; }
+  .specials .card.wide .art { aspect-ratio: 1600 / 1050; min-height: 0; }
+  .specials .card.wide .body { justify-content: center; padding: 32px 36px; }
+  .specials .card.wide .body p { font-size: 14.5px; }
+  .deadline { font-size: 24px; }
+}
+
+/* ---------- 수정: 좌측 정렬 · 스페셜 이미지 패딩 · 소개 문구 축소 ---------- */
+.sessions-page .day-tag, .sessions-page .card .time, .sessions-page .date-line, .sessions-page .card .body, .sessions-page .card p { text-align: left; }
+.sessions-page .date-line { margin-left: 4px; }
+.specials .card.wide .art { margin: 14px 14px 0; border-radius: 18px; }
+.specials .card.wide .art .no { left: 16px; top: 14px; }
+.intro .lead2 { font-size: 15px; margin-top: 26px; }
+.intro .lead3 { font-size: 13px; margin-top: 18px; }
+@media (min-width: 960px) {
+  .specials .card.wide .art { margin: 16px 0 16px 16px; }
+  .intro .lead2 { font-size: 22px; }
+  .intro .lead3 { font-size: 17px; }
+}
+
+/* ---------- 스페셜 2개: 위 4개 카드와 동일한 디자인 ---------- */
+.specials { grid-template-columns: 1fr; }
+.specials .cards { grid-template-columns: 1fr; gap: 10px; }
+.sessions-page .specials .card { display: flex; flex-direction: column; border-radius: 18px; }
+.specials .card .art { aspect-ratio: 1600 / 1050; margin: 0; border-radius: 0; }
+.specials .card .art .no { left: 12px; top: 10px; font-size: 14px; }
+.specials .card .body { padding: 11px 12px 14px; }
+.specials .card .tag { margin: 0 0 8px; padding: 4px 8px; font-size: 10px; }
+.specials .card .time { font-size: var(--date-size); }
+.specials .card .body p { margin-top: 6px; font-size: 11px; line-height: 1.55; color: var(--mute); }
+@media (min-width: 960px) {
+  .specials { grid-template-columns: 1fr; }
+  .sessions-page .specials .cards { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .specials .card .art { aspect-ratio: 1600 / 1050; margin: 0; min-height: 0; }
+  .specials .card .body { padding: 11px 12px 14px; }
+  .specials .card .body p { font-size: 12.5px; }
+}
+
+/* ---------- 상단 로고 확대 ---------- */
+.intro { padding-top: 92px; }
+.intro-logo { margin-bottom: 30px; }
+.intro-logo img { height: 92px; }
+@media (min-width: 960px) {
+  .intro { padding-top: 110px; }
+  .intro-logo { margin-bottom: 40px; }
+  .intro-logo img { height: 150px; }
+}
+
+/* ---------- 상단 로고 비율 정리 (모바일 폭의 약 43% / PC 약 310px) ---------- */
+.intro { padding-top: 88px; }
+.intro-logo { margin-bottom: 28px; }
+.intro-logo img { height: 80px; }
+@media (min-width: 960px) {
+  .intro { padding-top: 104px; }
+  .intro-logo { margin-bottom: 36px; }
+  .intro-logo img { height: 118px; }
+}
+
+/* ---------- 신청 페이지: 기존 디자인 유지 + 새 항목(성별·NEXT) ---------- */
+.time small { letter-spacing: .08em; font-size: 10px; }
+.gender-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.g-btn { height: 52px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); font: 600 15px/1 var(--display); color: var(--ink-2); transition: all .25s var(--ease); }
+.g-btn.on { background: var(--ink); border-color: var(--ink); color: #fff; box-shadow: 0 10px 22px -12px rgba(255,106,26,.55), inset 0 0 0 1px rgba(255,160,70,.35); }
+.f.err .g-btn { border-color: var(--err); }
+.submit.next { letter-spacing: .12em; }
+.main .top .ttl { letter-spacing: .06em; font-size: 12.5px; }
+.main .top .ttl small { letter-spacing: .2em; font-size: 10px; }
+
+/* 신청 페이지 헤더: 도안 위치(뒤로가기 좌측 · 제목 중앙) + 기존 톤 */
+.main .top { justify-content: space-between; }
+.main .top .ttl { flex: 1; text-align: center; font: 500 14px/1.4 var(--display); letter-spacing: .14em; color: var(--ink-2); text-transform: none; }
+.main .top-sp { display: block; width: 38px; flex: none; }
+
+/* ---------- 2단계: 사이즈 · 동의 · 문안 ---------- */
+.f .note { font-size: 11px; font-weight: 500; color: var(--rust); letter-spacing: -.01em; }
+.f.off { opacity: .45; pointer-events: none; }
+.cons-sec { gap: 22px; }
+.cons-h b { font: 600 13px/1.3 var(--display); }
+.doc-box { width: 100%; height: 48px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); font: 500 13px/1 var(--display); color: var(--ink-2); }
+.choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.c-btn { height: 52px; padding: 0 8px; font-size: 13px; line-height: 1.25; }
+.cons.err .c-btn { border-color: var(--err); }
+.doc-scroll { max-height: 190px; overflow-y: auto; padding: 16px; border-radius: 16px; border: 1.5px solid var(--line); background: var(--card); font-size: 12.5px; line-height: 1.75; color: var(--ink-2); word-break: keep-all; }
+.doc-blk .cons-h { margin-bottom: 0; }
+
+/* ---------- 신청 기간 종료 화면 ---------- */
+.closed { position: relative; min-height: 100svh; display: grid; place-items: center; overflow: hidden; background: #0a0504; color: #fff; text-align: center; }
+.closed-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 60%; }
+.closed-in { position: relative; z-index: 1; width: 100%; padding: 0 24px; display: grid; gap: 34vh; }
+.closed-logo { margin: 0; display: flex; justify-content: center; }
+.closed-logo img { width: min(62%, 300px); height: auto; filter: drop-shadow(0 6px 40px rgba(255,120,30,.35)); }
+.closed-msg { margin: 0; font: 400 14px/1.8 var(--display); letter-spacing: -.01em; word-break: keep-all; text-shadow: 0 2px 16px rgba(0,0,0,.45); }
+@media (min-width: 960px) {
+  .closed-in { gap: 30vh; }
+  .closed-logo img { width: clamp(300px, 24vw, 460px); }
+  .closed-msg { font-size: 18px; }
+}
+
+/* ---------- 신청 기간 안내 ---------- */
+.deadline { margin: 40px 0 12px; display: grid; justify-items: center; gap: 14px; font-family: var(--display); }
+.dl-label { display: flex; align-items: center; gap: 12px; font: 600 11px/1 var(--display); letter-spacing: .3em; text-indent: .3em; color: var(--mute); }
+.dl-label::before, .dl-label::after { content: ""; width: 28px; height: 1px; background: var(--line); }
+.dl-main { display: flex; align-items: center; gap: 22px; color: var(--ink); }
+.dl-d { display: grid; justify-items: center; gap: 6px; }
+.dl-main b { font: 400 40px/1 var(--display); letter-spacing: -.04em; }
+.dl-d i { font: 600 10px/1 var(--display); font-style: normal; letter-spacing: .3em; text-indent: .3em; color: var(--orange); }
+.dl-bar { width: 1px; height: 38px; background: var(--line); }
+.dl-t { margin-bottom: 16px; }
+.dl-sub { font: 500 12px/1 var(--display); letter-spacing: .08em; color: var(--ink-2); }
+@media (min-width: 960px) {
+  .deadline { margin-top: 52px; gap: 18px; }
+  .dl-label { font-size: 12px; }
+  .dl-main b { font-size: 56px; }
+  .dl-bar { height: 54px; }
+  .dl-t { margin-bottom: 22px; }
+  .dl-sub { font-size: 14px; }
+}
+
+/* ---------- 황금비(φ≈1.618) 기준 정리: 간격은 피보나치(8·13·21·34·55·89·144), 폭은 987 ÷ 1.618 = 610 ---------- */
+.sessions-page { --f1: 8px; --f2: 13px; --f3: 21px; --f4: 34px; --f5: 55px; --f6: 89px; --f7: 144px; padding-bottom: var(--f6); }
+.sessions-page .intro { padding: var(--f6) 0 0; }
+.sessions-page .intro-logo { margin-bottom: var(--f3); }
+.sessions-page .intro-logo img { height: var(--f6); }
+.sessions-page .intro .lead2 { margin-top: var(--f4); }
+.sessions-page .intro .lead3 { margin-top: var(--f3); }
+.sessions-page .class-panel { margin-top: var(--f5); padding: var(--f3) var(--f2) var(--f2); gap: var(--f4); }
+.sessions-page .day-tag { margin-bottom: var(--f2); }
+.sessions-page .class-panel .cards, .sessions-page .specials .cards { gap: var(--f2); }
+.sessions-page .specials { margin-top: var(--f4); }
+.sessions-page .wrap.end { margin-top: var(--f5); }
+.sessions-page .end-btn { margin-top: 0; }
+.sessions-page .deadline { margin: var(--f5) 0 0; gap: var(--f3); }
+@media (min-width: 960px) {
+  .sessions-page .wrap { max-width: 1083px; }
+  .sessions-page .intro { padding-top: var(--f6); }
+  .sessions-page .intro-logo { margin-bottom: var(--f4); }
+  .sessions-page .intro-logo img { height: var(--f7); }
+  .sessions-page .intro .lead2 { margin-top: var(--f4); }
+  .sessions-page .class-panel { margin-top: var(--f6); padding: var(--f4); gap: var(--f4); }
+  .sessions-page .class-panel .cards, .sessions-page .specials .cards { gap: var(--f3); }
+  .sessions-page .specials { margin-top: var(--f4); }
+  .sessions-page .wrap.end { margin-top: var(--f6); }
+  .sessions-page .end-btn { width: 610px; max-width: 100%; }
+  .sessions-page .deadline { margin-top: var(--f6); }
+  .sessions-page { padding-bottom: var(--f7); }
+}
+@media (min-width: 960px) { .sessions-page .end-btn { margin: 0 auto; } }
+
+/* ---------- 2P 소개 문구 타이포 ---------- */
+.sessions-page .intro .when { display: grid; gap: 8px; font: 400 13px/1.4 var(--display); }
+.sessions-page .intro .w-date { font-weight: 500; letter-spacing: .14em; text-indent: .14em; color: var(--ink); }
+.sessions-page .intro .w-place { font-size: 12px; letter-spacing: .06em; text-indent: .06em; color: var(--mute); }
+.sessions-page .intro .rule { display: block; width: 34px; height: 1px; margin: var(--f4) auto 0; background: var(--orange); }
+.sessions-page .intro .lead2 { margin-top: var(--f4); display: grid; gap: 6px; font: 300 17px/1.5 var(--display); letter-spacing: -.03em; color: var(--ink-2); }
+.sessions-page .intro .lead2 span:last-child { font-weight: 600; color: var(--ink); }
+.sessions-page .intro .lead3 { margin-top: var(--f4); display: grid; gap: 2px; font: 400 12.5px/2 var(--display); letter-spacing: -.01em; color: var(--mute); }
+.sessions-page .intro .lead3 em { font-style: italic; color: var(--ink); letter-spacing: .01em; }
+.sessions-page .intro br { display: none; }
+@media (min-width: 960px) {
+  .sessions-page .intro .when { gap: 10px; font-size: 15px; }
+  .sessions-page .intro .w-place { font-size: 13.5px; }
+  .sessions-page .intro .rule { width: 55px; margin-top: var(--f5); }
+  .sessions-page .intro .lead2 { margin-top: var(--f5); gap: 8px; font-size: 26px; }
+  .sessions-page .intro .lead3 { margin-top: var(--f4); font-size: 15px; }
+}
+
+/* ---------- 2P 소개 문구: 에디토리얼 톤 (세로 헤어라인 · 넓은 자간 · 큰 여백) ---------- */
+.sessions-page .intro .when { gap: 10px; }
+.sessions-page .intro .w-date { font: 500 11.5px/1.4 var(--display); letter-spacing: .34em; text-indent: .34em; text-transform: uppercase; color: var(--ink); }
+.sessions-page .intro .w-place { font-size: 11px; letter-spacing: .16em; text-indent: .16em; color: var(--mute); }
+.sessions-page .intro .rule { width: 1px; height: var(--f5); margin: var(--f4) auto 0; background: linear-gradient(to bottom, rgba(20,16,12,0), var(--ink)); }
+.sessions-page .intro .lead2 { margin-top: var(--f3); gap: 4px; font: 300 19px/1.45 var(--display); letter-spacing: -.045em; color: var(--ink); }
+.sessions-page .intro .lead2 span:last-child { font-weight: 700; letter-spacing: -.05em; }
+.sessions-page .intro .lead2::after { content: ""; display: block; width: 1px; height: var(--f4); margin: var(--f4) auto 0; background: var(--line, rgba(20,16,12,.2)); }
+.sessions-page .intro .lead3 { margin-top: var(--f4); gap: 0; font: 400 12px/2.05 var(--display); letter-spacing: .01em; color: var(--mute); }
+.sessions-page .intro .lead3 em { color: var(--orange); letter-spacing: .02em; }
+@media (min-width: 960px) {
+  .sessions-page .intro .w-date { font-size: 13px; letter-spacing: .4em; text-indent: .4em; }
+  .sessions-page .intro .w-place { font-size: 12.5px; letter-spacing: .2em; text-indent: .2em; }
+  .sessions-page .intro .rule { height: var(--f6); margin-top: var(--f5); }
+  .sessions-page .intro .lead2 { margin-top: var(--f4); gap: 8px; font-size: 34px; }
+  .sessions-page .intro .lead2::after { height: var(--f5); margin-top: var(--f5); }
+  .sessions-page .intro .lead3 { margin-top: var(--f5); font-size: 14.5px; }
+}
+
+/* 세로선 제거 · ambassador 강조 제거(이탤릭 X, 검정) */
+.sessions-page .intro .rule, .sessions-page .intro .lead2::after { display: none; }
+.sessions-page .intro .lead2 { margin-top: var(--f5); }
+.sessions-page .intro .lead3 { margin-top: var(--f4); }
+.sessions-page .intro .lead3 em { font-style: normal; color: inherit; letter-spacing: inherit; }
+@media (min-width: 960px) {
+  .sessions-page .intro .lead2 { margin-top: var(--f6); }
+  .sessions-page .intro .lead3 { margin-top: var(--f5); }
+}
+.sessions-page .intro .lead3 em { font-weight: 400; color: var(--ink); }
+
+/* 소개 하단 문구 확대 · 문단 간격 축소 / 신청 기간을 버튼 위로 */
+.sessions-page .intro .lead3 { margin-top: var(--f3); font-size: 13.5px; }
+.sessions-page .deadline { margin: 0; }
+.sessions-page .end-btn { margin-top: var(--f4); }
+.sessions-page .wrap.end { margin-top: var(--f5); }
+@media (min-width: 960px) {
+  .sessions-page .intro .lead3 { margin-top: var(--f4); font-size: 16px; }
+  .sessions-page .wrap.end { margin-top: var(--f6); }
+  .sessions-page .end-btn { margin-top: var(--f5); }
+}
+
+/* 시간표 클래스명 굵기 완화 */
+.tile { font-weight: 400; letter-spacing: .05em; }

@@ -3,7 +3,7 @@
   const app = document.getElementById("app");
 
   // 페이지 이동 간에 유지되는 입력 상태
-  const state = { selected: [], form: {}, agree: false, submitting: false, error: "", lastChosen: [] };
+  const state = { selected: [], form: {}, agree: false, submitting: false, error: "", lastChosen: [], step: 1 };
 
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const sessionId = (date, time, name) => `${date} ${time} ${name}`;
@@ -45,8 +45,7 @@
         const on = state.selected.includes(id);
         return `<button type="button" class="tile ${on ? "on" : full ? "dim" : ""}" data-session="${esc(id)}" aria-pressed="${on}"><span class="chk">${ICON.check}</span><span>${esc(name)}</span></button>`;
       }).join("");
-      const part = row.time < "12" ? "AM" : row.time < "17" ? "PM" : "EVE";
-      return `<div class="slot"><div class="time">${row.time}<small>${part}</small></div>${cells}</div>`;
+      return `<div class="slot"><div class="time">${row.time}<small>~ ${row.end}</small></div>${cells}</div>`;
     }).join("");
     return days + `<div class="slots">${rows}</div>`;
   }
@@ -78,89 +77,126 @@
     return `<div class="f" data-field="${name}"><label>${label}</label><input class="in" name="${name}" value="${esc(state.form[name] || "")}" ${attrs || ""} /></div>`;
   }
 
-  function Apply() {
+  function genderField() {
+    const g = state.form.gender || "";
+    return `<div class="f gender" data-field="gender"><label>성별</label>
+      <div class="gender-row">${["남", "여"].map((v) => `<button type="button" class="g-btn ${g === v ? "on" : ""}" data-gender="${v}" aria-pressed="${g === v}">${v}</button>`).join("")}</div></div>`;
+  }
+
+  const hasRun = () => state.selected.some((id) => id.endsWith("STRETCH YOUR RUN"));
+  function docBlock(title, key) {
+    const d = C.CONSENT_DOCS[key];
+    return `<div class="cons doc-blk"><div class="cons-h"><b>${title}</b></div><div class="doc-scroll">${esc(d.text).replace(/\n/g, "<br />")}</div></div>`;
+  }
+  function mktField() {
+    const btn = (v, t) => `<button type="button" class="g-btn c-btn ${state.mkt === v ? "on" : ""}" data-mkt="${v}" aria-pressed="${state.mkt === v}">${t}</button>`;
+    return `<div class="cons" data-field="agreeMkt">
+      <div class="cons-h"><b>마케팅 활용동의</b></div>
+      <button type="button" class="doc-box" data-doc="marketing">내용 보기</button>
+      <div class="choice-row">${btn("Y", "네, 동의합니다")}${btn("N", "아니요, 동의하지 않습니다")}</div>
+    </div>`;
+  }
+  function step2Body() {
+    const female = state.form.gender === "여";
+    const S = female ? C.SIZES.female : C.SIZES.male;
+    const run = hasRun();
+    const shoes = run ? selectField("shoes", "운동화 사이즈", C.SIZES.shoes, '<span class="note">STRETCH YOUR RUN 참가자 전용</span>') : "";
     return `
-      <div class="split view">
-      <div class="page main">
-        <div class="top"><button class="back" data-go="/sessions" aria-label="뒤로">${ICON.back}</button><div class="ttl">Session Application<small>ANDAR. IN MOTION</small></div></div>
-        <div class="wrap">
-          <div class="notice">
-            <b>* 세션 신청 시 유의사항 *</b>
-            세션은 최대 ${C.MAX_SESSIONS}개까지 신청 가능하며, 최종 참가자는 세션별로 추첨을 통해 선정됩니다.<br />
-            최종 참가자에게는 ${esc(C.ANNOUNCE_DATE)} 개별 연락드릴 예정입니다.
-          </div>
-
-          <section class="sec">
-            <div class="sec-h"><span class="no">01</span><h2>Session</h2><span class="aux" id="count"></span></div>
-            <div id="tiles">${tiles()}</div>
-          </section>
-
           <form id="form" novalidate>
             <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" />
+            <section class="sec">
+              <div class="sec-h"><span class="no">03</span><h2>Gift</h2><span class="aux">${female ? "여성" : "남성"}</span></div>
+              <div class="form">
+                ${selectField("top", "상의", S.top)}
+                ${female ? selectField("bra", "브라탑", S.bra) : ""}
+                ${selectField("bottom", "하의", S.bottom)}
+                ${shoes}
+              </div>
+            </section>
+            <section class="sec cons-sec">
+              ${mktField()}
+              ${docBlock("개인정보 처리업무 위탁안내", "third")}
+              ${docBlock("유의 사항 확인", "notice")}
+            </section>
+          </form>`;
+  }
+
+  function Apply() {
+    const step1 = state.step === 1;
+    const head = `<div class="top"><button class="back" data-${step1 ? "go" : "step"}="${step1 ? "/sessions" : "1"}" aria-label="뒤로">${ICON.back}</button><div class="ttl">안다르 인모션 클래스</div><span class="top-sp"></span></div>`;
+    const honeypot = '<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" />';
+    const body = step1 ? `
+          <div class="notice">
+            <b>* 클래스 신청 시 유의사항 *</b>
+            클래스는 1인당 최대 ${C.MAX_SESSIONS}개까지 신청 가능하며<br />
+            최종 참가자는 ${esc(C.ANNOUNCE_DATE)} 개별 문자 발송드릴 예정입니다.
+          </div>
+          <section class="sec">
+            <div class="sec-h"><span class="no">01</span><h2>Class</h2><span class="aux" id="count"></span></div>
+            <div id="tiles">${tiles()}</div>
+          </section>
+          <form id="form" novalidate>
+            ${honeypot}
             <section class="sec">
               <div class="sec-h"><span class="no">02</span><h2>Information</h2></div>
               <div class="form">
                 ${inputField("name", "성함", 'autocomplete="name" placeholder="홍길동"')}
+                ${genderField()}
                 ${inputField("phone", "연락처", 'type="tel" inputmode="numeric" placeholder="010-0000-0000" autocomplete="tel"')}
                 ${inputField("andarId", "안다르 아이디", 'autocapitalize="off" autocomplete="off" placeholder="andar_id"')}
                 ${inputField("instaId", "인스타 아이디 <em>(선택)</em>", 'autocapitalize="off" autocomplete="off" placeholder="@instagram_id"')}
               </div>
             </section>
-            <section class="sec">
-              <div class="sec-h"><span class="no">03</span><h2>Gift</h2><span class="aux">기프트 사이즈 및 배송지 정보</span></div>
-              <div class="form">
-                ${sizeField("bra", "브라탑 사이즈", C.SIZES.bra)}
-                ${sizeField("zipup", "집업 사이즈", C.SIZES.zipup)}
-                ${sizeField("leggings", "레깅스 기장 및 사이즈", C.SIZES.leggings)}
-                ${sizeField("shoes", "신발 사이즈 <em>mm</em>", C.SIZES.shoes)}
-                <div class="f" data-field="zip"><label>우편번호</label>
-                  <div class="zip-row"><input class="in" name="zip" value="${esc(state.form.zip || "")}" readonly placeholder="우편번호 검색 후 입력돼요" data-postcode /><button type="button" class="pc-btn" data-postcode>우편번호 검색</button></div></div>
-                <div class="f" data-field="address"><label>기본주소</label><input class="in" name="address" value="${esc(state.form.address || "")}" readonly placeholder="우편번호 검색 시 자동으로 입력돼요" data-postcode /></div>
-                ${inputField("addressDetail", "상세주소", 'autocomplete="address-line2" placeholder="동/호수 등 상세주소"')}
-              </div>
-            </section>
-            <section class="sec">
-              <label class="agree"><input type="checkbox" name="agree" ${state.agree ? "checked" : ""} /><span class="box">${ICON.check}</span>
-                <span><b>[필수] 개인정보 수집·이용 동의</b><br />
-                · 수집 항목: 성함, 연락처, 안다르 아이디, 인스타 아이디(선택), 기프트 사이즈, 배송지(우편번호·주소)<br />
-                · 수집·이용 목적: 참가자 추첨·선정, 개별 안내, 기프트 배송<br />
-                · 보유·이용 기간: 행사 종료 후 파기<br />
-                · 동의를 거부할 수 있으나, 거부 시 세션 신청이 불가합니다.</span></label>
-            </section>
-            <section class="sec cons-sec">
-              ${consent("agreeMkt", "마케팅 활용동의", "marketing", "네, 동의합니다")}
-              ${consent("agreeThird", "제 3자 정보제공동의", "third", "네, 동의합니다")}
-              ${consent("agreeNotice", "유의 사항 확인", "notice", "네, 확인했습니다")}
-            </section>
-          </form>
+          </form>` : step2Body();
+    const action = step1
+      ? `<button class="submit next ready" id="next" type="button"><span>NEXT</span></button>`
+      : '<button class="submit" id="submit" type="submit" form="form"></button>';
+    return `
+      <div class="split view">
+      <div class="page main">
+        ${head}
+        <div class="wrap">${body}
         </div>
-        <div class="dock"><p class="msg" id="err">${esc(state.error)}</p><button class="submit" id="submit" type="submit" form="form"></button></div>
+        <div class="dock"><p class="msg" id="err">${esc(state.error)}</p>${action}</div>
       </div>
       </div>`;
   }
 
-  function art(item, i, cls) {
-    const img = item.image ? `<img src="${esc(item.image)}" alt="${esc(item.title || "")}" />` : `<div class="mesh kv"><img src="assets/keyvisual.png" alt="" /></div>`;
-    return `<div class="art v${(i % 4) + 1} ${cls || ""}">${img}<span class="no">${String(i + 1).padStart(2, "0")}</span></div>`;
+  function art(item, no) {
+    const num = no ? `<span class="no">${String(no).padStart(2, "0")}</span>` : "";
+    return `<div class="art">${item.image ? `<img src="${esc(item.image)}" alt="${esc(item.title)}" />` : ""}${num}</div>`;
   }
 
   function Sessions() {
-    const cards = C.MAIN_MOTION.map((m, i) => `
-      <div class="card">${art(m, i)}<div class="body"><h3>${esc(m.title)}</h3><p>${esc(m.text)}</p></div></div>`).join("");
-    const wide = (title, r) => `
-          <section class="group"><div class="group-h"><h2>${title}</h2></div>
-            <div class="cards"><div class="card wide">${art(r, 0)}<div class="body"><span class="tag">${esc(r.subtitle)}</span><h3>${title}</h3><p>${esc(r.text)}</p></div></div></div>
-          </section>`;
+    let n = 0;
+    const days = C.MAIN_MOTION.map((d) => `
+      <div class="day-col"><div class="day-tag">${esc(d.day)}</div>
+        <div class="cards">${d.classes.map((m) => `
+          <div class="card">${art(m, ++n)}<div class="body"><b class="time">${esc(m.time)}</b><p>${esc(m.text)}</p></div></div>`).join("")}
+        </div></div>`).join("");
+    const wide = (r, no) => `
+      <div class="card">${art(r, no)}<div class="body"><span class="tag">${esc(r.subtitle)}</span><b class="time">${esc(r.time)}</b><p>${esc(r.text)}</p></div></div>`;
     return `
       <div class="page sessions-page view">
-        <div class="top"><button class="back" data-go="/" aria-label="뒤로">${ICON.back}</button><div class="ttl">ANDAR. IN MOTION<small>SPECIAL SESSION</small></div></div>
+        <div class="top"><button class="back" data-go="/" aria-label="뒤로">${ICON.back}</button></div>
         <div class="wrap">
-          <section class="group"><div class="group-h"><h2>MAIN MOTION</h2></div><div class="cards">${cards}</div></section>
-          ${wide("STRETCH YOUR RUN", C.STRETCH_YOUR_RUN)}
-          ${wide("K-SOUND BATH", C.K_SOUND_BATH)}
-          ${wide("SPECIAL GIFT", C.SPECIAL_GIFT)}
+          <header class="intro">
+            <h1 class="intro-logo"><img src="assets/popup-logo.png" alt="ANDAR. IN MOTION" /></h1>
+            <p class="when"><span class="w-date">${esc(C.EVENT.periodShort)}</span><span class="w-place">${esc(C.EVENT.address)}</span></p>
+            <i class="rule"></i>
+            <p class="lead2">${C.INTRO.lead.map((l) => `<span>${esc(l)}</span>`).join("")}</p>
+            <p class="lead3">${C.INTRO.sub.map((l) => `<span>${esc(l).replace("ambassador", "<em>ambassador</em>")}</span>`).join("")}</p>
+          </header>
+          <section class="class-panel">${days}</section>
+          <section class="class-panel specials"><div class="day-col"><div class="day-tag">${esc(C.SPECIAL_DATE)}</div><div class="cards">${wide(C.STRETCH_YOUR_RUN, 1)}${wide(C.K_SOUND_BATH, 2)}</div></div></section>
         </div>
-        <div class="wrap"><button class="submit ready end-btn" type="button" data-go="/apply"><span>세션 신청</span></button></div>
+        <div class="wrap end"><div class="deadline">
+            <span class="dl-label">클래스 신청 기간</span>
+            <div class="dl-main"><span class="dl-d"><b>${esc(C.APPLY_DEADLINE.date)}</b><i>${esc(C.APPLY_DEADLINE.dow)}</i></span><span class="dl-bar"></span><b class="dl-t">${esc(C.APPLY_DEADLINE.time)}</b></div>
+            <span class="dl-sub">까지</span>
+          </div>
+          <button class="submit ready end-btn" type="button" data-go="/apply"><span>클래스 신청</span></button>
+        </div>
       </div>`;
   }
 
@@ -180,10 +216,35 @@
       </div>`;
   }
 
+  // ---------- 신청 마감 ----------
+  // 사용자 기기 시계가 틀려도 마감이 정확하도록 서버 응답의 Date 헤더로 시차를 보정한다 (실패 시 기기 시계 사용)
+  let clockOffset = 0;
+  const isClosed = () => Date.now() + clockOffset >= new Date(C.DEADLINE).getTime();
+  function syncClock() {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 1500);
+    return fetch(location.pathname, { method: "HEAD", cache: "no-store", signal: ctrl.signal })
+      .then((r) => { const d = Date.parse(r.headers.get("Date") || ""); if (d) clockOffset = d - Date.now(); })
+      .catch(() => {})
+      .finally(() => clearTimeout(t));
+  }
+
+  function Closed() {
+    return `
+      <section class="closed view">
+        <img class="closed-bg" src="assets/closed-kv.jpg" alt="" />
+        <div class="closed-in">
+          <h1 class="closed-logo"><img src="assets/popup-logo.png" alt="ANDAR. IN MOTION" /></h1>
+          <p class="closed-msg">클래스 신청이 마감되었습니다.<br />안다르 인모션 클래스에 관심을 가져주셔서 감사합니다.</p>
+        </div>
+      </section>`;
+  }
+
   // ---------- routing ----------
   const routes = { "/": Home, "/apply": Apply, "/sessions": Sessions, "/done": Done };
   function route() {
     const path = location.hash.replace(/^#/, "") || "/";
+    if (isClosed()) { app.innerHTML = Closed(); window.scrollTo(0, 0); return; }
     app.innerHTML = (routes[path] || Home)();
     window.scrollTo(0, 0);
     if (path === "/apply") { bindApply(); syncSelection(); }
@@ -202,8 +263,15 @@
     if (doc) return openDoc(doc.dataset.doc);
     if (e.target.closest("[data-postcode]")) return openPostcode();
     if (e.target.id === "modal" || e.target.closest("[data-close]")) return closeModal();
+    const stepBtn = e.target.closest("[data-step]");
+    if (stepBtn) { readForm(); state.step = Number(stepBtn.dataset.step); state.error = ""; return route(); }
+    if (e.target.closest("#next")) return goNext();
+    const mBtn = e.target.closest("[data-mkt]");
+    if (mBtn) return pickMkt(mBtn);
+    const gBtn = e.target.closest("[data-gender]");
+    if (gBtn) return pickGender(gBtn);
     const go = e.target.closest("[data-go]");
-    if (go) { readForm(); location.hash = go.dataset.go; return; }
+    if (go) { readForm(); if (go.dataset.go === "/apply") state.step = 1; location.hash = go.dataset.go; return; }
     const tile = e.target.closest("[data-session]");
     if (tile) toggleSession(tile.dataset.session);
   });
@@ -329,24 +397,21 @@
     const b = document.getElementById("submit");
     if (!b) return;
     const n = state.selected.length;
-    b.classList.toggle("ready", n > 0);
+    b.classList.add("ready");
     b.disabled = state.submitting;
     b.innerHTML = state.submitting
       ? '<span class="spin"></span><span>신청 중...</span>'
-      : `<span>신청하기</span>${n ? `<span class="pill">${n}개 세션</span>` : ""}`;
+      : `<span>신청하기</span>${n ? `<span class="pill">${n}개 클래스</span>` : ""}`;
   }
 
   // ---------- form ----------
-  const FIELDS = ["name", "phone", "andarId", "bra", "zipup", "leggings", "shoes", "zip", "address", "addressDetail"];
-  const CONSENTS = ["agreeMkt", "agreeThird", "agreeNotice"]; // 모두 필수
-  const TEXT_FIELDS =["name", "phone", "andarId", "instaId", "zip", "address", "addressDetail"];
+  const STEP1_FIELDS = ["name", "gender", "phone", "andarId"];
+  const TEXT_FIELDS = ["name", "phone", "andarId", "instaId"];
   function readForm() {
     const f = document.getElementById("form");
     if (!f) return;
-    TEXT_FIELDS.forEach((k) => { state.form[k] = f.elements[k].value.trim(); });
-    state.trap = f.elements.website ? f.elements.website.value : "";
-    state.agree = f.elements.agree.checked;
-    CONSENTS.forEach((k) => { state[k] = f.elements[k].checked; });
+    TEXT_FIELDS.forEach((k) => { if (f.elements[k]) state.form[k] = f.elements[k].value.trim(); });
+    if (f.elements.website) state.trap = f.elements.website.value;
   }
   function bindApply() {
     const f = document.getElementById("form");
@@ -359,6 +424,34 @@
       if (e.target.name === "phone") e.target.value = fmtPhone(e.target.value);
     });
   }
+  function pickGender(btn) {
+    if (state.form.gender && state.form.gender !== btn.dataset.gender) { delete state.form.top; delete state.form.bra; delete state.form.bottom; }
+    state.form.gender = btn.dataset.gender;
+    btn.closest(".gender").classList.remove("err");
+    btn.closest(".gender-row").querySelectorAll(".g-btn").forEach((b) => {
+      const on = b === btn;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+  }
+  function pickMkt(btn) {
+    state.mkt = btn.dataset.mkt;
+    const wrap = btn.closest(".cons");
+    wrap.classList.remove("err");
+    wrap.querySelectorAll("[data-mkt]").forEach((b) => {
+      const on = b === btn;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+  }
+  function goNext() {
+    readForm();
+    const v = validateStep1();
+    if (v) return showError(v);
+    setMsg("");
+    state.step = 2;
+    route();
+  }
 
   const normPhone = (p) => p.replace(/\D/g, "");
   function fmtPhone(v) {
@@ -367,18 +460,21 @@
     if (d.length < 8) return `${d.slice(0, 3)}-${d.slice(3)}`;
     return `${d.slice(0, 3)}-${d.slice(3, d.length - 4)}-${d.slice(-4)}`;
   }
-  const LABELS = { name: "성함", phone: "연락처", andarId: "안다르 아이디", bra: "브라탑 사이즈", zipup: "집업 사이즈", leggings: "레깅스 기장 및 사이즈", shoes: "신발 사이즈", zip: "우편번호", address: "주소", addressDetail: "상세주소" };
+  const LABELS = { name: "성함", gender: "성별", phone: "연락처", andarId: "안다르 아이디", top: "상의", bra: "브라탑", bottom: "하의", shoes: "운동화 사이즈" };
+  const PICK = ["gender", "top", "bra", "bottom", "shoes"];
 
-  function validate() {
+  function validateStep1() {
     const f = state.form;
-    if (state.selected.length === 0) return { scroll: "tiles", msg: "참여할 세션을 1개 이상 선택해주세요." };
-    for (const k of FIELDS) if (!f[k]) return { field: k, msg: `${LABELS[k]}을(를) ${["bra", "zipup", "leggings", "shoes"].includes(k) ? "선택" : "입력"}해주세요.` };
+    if (state.selected.length === 0) return { scroll: "tiles", msg: "참여할 클래스를 1개 이상 선택해주세요." };
+    for (const k of STEP1_FIELDS) if (!f[k]) return { field: k, msg: `${LABELS[k]}을(를) ${PICK.includes(k) ? "선택" : "입력"}해주세요.` };
     if (!/^01[016789]\d{7,8}$/.test(normPhone(f.phone))) return { field: "phone", msg: "연락처 형식을 확인해주세요." };
-    if (!/^\d{5}$/.test(f.zip)) return { field: "zip", msg: "우편번호 5자리를 확인해주세요." };
-    if (!state.agree) return { scroll: "form", msg: "개인정보 수집·이용에 동의해주세요." };
-    if (!state.agreeMkt) return { field: "agreeMkt", msg: "마케팅 활용에 동의해주세요." };
-    if (!state.agreeThird) return { field: "agreeThird", msg: "제 3자 정보제공에 동의해주세요." };
-    if (!state.agreeNotice) return { field: "agreeNotice", msg: "유의 사항을 확인해주세요." };
+    return null;
+  }
+  function validateStep2() {
+    const f = state.form;
+    const need = ["top", ...(f.gender === "여" ? ["bra"] : []), "bottom", ...(hasRun() ? ["shoes"] : [])];
+    for (const k of need) if (!f[k]) return { field: k, msg: `${LABELS[k]}을(를) 선택해주세요.` };
+    if (!state.mkt) return { field: "agreeMkt", msg: "마케팅 활용 동의 여부를 선택해주세요." };
     return null;
   }
   function showError(v) {
@@ -392,8 +488,11 @@
   async function onSubmit(e) {
     e.preventDefault();
     if (state.submitting) return;
+    if (isClosed()) return route();
     readForm();
-    const v = validate();
+    const v1 = validateStep1();
+    if (v1) { state.step = 1; route(); return showError(v1); }
+    const v = validateStep2();
     if (v) return showError(v);
     setMsg("");
     state.submitting = true;
@@ -401,25 +500,23 @@
     try {
       await submit({
         name: state.form.name,
+        gender: state.form.gender,
         phone: normPhone(state.form.phone),
         andarId: state.form.andarId,
         instaId: state.form.instaId || "",
-        zip: state.form.zip,
-        address: state.form.address,
-        addressDetail: state.form.addressDetail,
         sessions: state.selected,
-        bra: state.form.bra,
-        zipup: state.form.zipup,
-        leggings: state.form.leggings,
-        shoes: state.form.shoes,
+        top: state.form.top,
+        bra: state.form.gender === "여" ? state.form.bra : "-",
+        bottom: state.form.bottom,
+        shoes: hasRun() ? state.form.shoes : "-",
         agreed: true,
-        agreedMarketing: true,
+        agreedMarketing: state.mkt === "Y",
         agreedThird: true,
         website: state.trap || "",
         elapsed: Math.round((Date.now() - (state.openedAt || Date.now())) / 1000),
       });
       state.lastChosen = state.selected.slice();
-      state.selected = []; state.form = {}; state.agree = false; CONSENTS.forEach((k) => { state[k] = false; }); state.submitting = false; state.openedAt = 0;
+      state.selected = []; state.form = {}; state.step = 1; state.mkt = ""; state.submitting = false; state.openedAt = 0;
       location.hash = "/done";
     } catch (err) {
       state.submitting = false;
@@ -470,16 +567,18 @@
       const list = JSON.parse(localStorage.getItem("mockApplications") || "[]");
       const nId = (s) => String(s || "").trim().toLowerCase();
       const nInsta = (s) => nId(s).replace(/^@/, "");
-      const nAddr = (a) => `${a.address || ""}${a.addressDetail || ""}`.replace(/\s/g, "").toLowerCase();
       if (list.some((a) => a.phone === payload.phone)) return reject(new Error("이미 신청된 연락처입니다."));
       if (list.some((a) => nId(a.andarId) === nId(payload.andarId))) return reject(new Error("이미 신청된 안다르 아이디입니다."));
       if (nInsta(payload.instaId) && list.some((a) => nInsta(a.instaId) === nInsta(payload.instaId))) return reject(new Error("이미 신청된 인스타 아이디입니다."));
-      if (list.some((a) => nAddr(a) === nAddr(payload))) return reject(new Error("이미 신청된 주소입니다."));
       list.push({ ...payload, createdAt: new Date().toISOString() });
       localStorage.setItem("mockApplications", JSON.stringify(list));
       resolve();
     }, 700));
   }
 
-  route();
+  syncClock().then(() => {
+    route();
+    // 페이지를 열어 둔 채 마감 시각이 지나면 종료 화면으로 전환
+    setInterval(() => { if (isClosed() && !document.querySelector(".closed")) route(); }, 15000);
+  });
 })();

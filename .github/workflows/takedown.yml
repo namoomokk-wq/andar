@@ -1,0 +1,22 @@
+# 신청 페이지 배포 내리기 (GitHub Pages 비공개 → 접속 시 404)
+# 2026-10-18 00:00 KST(= 10/17 15:00 UTC)에 자동 실행. 종료 화면은 10/15 00:00부터 3일간 표시됨.
+# 필요한 설정: 저장소 Settings > Secrets and variables > Actions 에 PAGES_ADMIN_TOKEN 등록
+#   (Pages 쓰기 권한이 있는 Personal Access Token: fine-grained "Pages: Read and write" 또는 classic "repo")
+# 토큰 없이 직접 하려면: 저장소 Settings > Pages > "Unpublish site"
+name: takedown-pages
+on:
+  schedule:
+    - cron: "0 15 17 10 *"
+  workflow_dispatch:
+jobs:
+  takedown:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check date (2026-10-18 이후에만 실행)
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ] && [ "$(date -u +%Y)" != "2026" ]; then echo "skip"; echo "SKIP=1" >> "$GITHUB_ENV"; fi
+      - name: Unpublish GitHub Pages
+        if: env.SKIP != '1'
+        env:
+          GH_TOKEN: ${{ secrets.PAGES_ADMIN_TOKEN }}
+        run: gh api -X DELETE "repos/${{ github.repository }}/pages" || echo "이미 내려갔거나 권한 없음"
