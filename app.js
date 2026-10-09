@@ -509,9 +509,7 @@
         bra: state.form.gender === "여" ? state.form.bra : "-",
         bottom: state.form.bottom,
         shoes: hasRun() ? state.form.shoes : "-",
-        agreed: true,
         agreedMarketing: state.mkt === "Y",
-        agreedThird: true,
         website: state.trap || "",
         elapsed: Math.round((Date.now() - (state.openedAt || Date.now())) / 1000),
       });
