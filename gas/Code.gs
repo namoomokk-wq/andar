@@ -52,17 +52,21 @@ function findDup(sheet, phone, andarId, insta) {
 }
 
 function doPost(e) {
-  var lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(20000); // 오픈 직후 동시 접수 대비
-    var d = JSON.parse(e.postData.contents);
+  var d;
+  try { d = JSON.parse(e.postData.contents); } catch (err) { return out({ ok: false, error: "서버 오류: " + err }); }
 
-    // 1단계 NEXT 시 중복 사전 확인 (저장하지 않음)
-    if (d.action === "check") {
+  // 1단계 NEXT 시 중복 사전 확인 (읽기 전용이라 잠금 없이 바로 처리 — 빠르게 응답)
+  if (d.action === "check") {
+    try {
       if (new Date() >= DEADLINE) return out({ ok: false, error: "클래스 신청이 마감되었습니다." });
       var dup0 = findDup(getSheet(), String(d.phone || "").replace(/\D/g, ""), d.andarId, d.instaId ? String(d.instaId).trim() : "");
       return out(dup0 ? { ok: false, field: dup0.field, error: dup0.error } : { ok: true });
-    }
+    } catch (err) { return out({ ok: false, error: "서버 오류: " + err }); }
+  }
+
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000); // 오픈 직후 동시 접수 대비
 
     // 봇 의심(허니팟 입력·너무 빠른 제출)은 저장하지 않고 성공처럼 응답
     if (d.website || (typeof d.elapsed === "number" && d.elapsed < MIN_ELAPSED_SEC)) return out({ ok: true });

@@ -417,6 +417,7 @@
     const f = document.getElementById("form");
     if (!state.openedAt) state.openedAt = Date.now();
     f.addEventListener("submit", onSubmit);
+    f.addEventListener("focusout", (e) => { if (["phone", "andarId", "instaId"].includes(e.target.name)) prefetchDup(); });
     f.addEventListener("change", (e) => { const c = e.target.closest(".cons"); if (c) c.classList.remove("err"); });
     f.addEventListener("input", (e) => {
       const fld = e.target.closest(".f");
@@ -445,7 +446,24 @@
     });
   }
   // 연락처·안다르 아이디·인스타 아이디 중복을 NEXT 시점에 미리 확인 (네트워크 오류 시에는 통과, 최종 제출에서 한 번 더 검사)
-  async function checkDup() {
+  const dupCache = {};
+  const dupKey = (f) => [normPhone(f.phone || ""), f.andarId || "", f.instaId || ""].join("|");
+  function checkDup() {
+    const f = state.form;
+    const k = dupKey(f);
+    if (!dupCache[k]) dupCache[k] = requestDup();
+    return dupCache[k];
+  }
+  // 입력을 마치고 칸을 벗어나는 순간 미리 확인해 두면 NEXT에서는 기다릴 필요가 거의 없다
+  function prefetchDup() {
+    const f = document.getElementById("form");
+    if (!f || !f.elements.phone || !f.elements.andarId) return;
+    readForm();
+    const v = state.form;
+    if (!/^01[016789]\d{7,8}$/.test(normPhone(v.phone || "")) || !v.andarId) return;
+    checkDup();
+  }
+  async function requestDup() {
     const f = state.form;
     const payload = { action: "check", phone: normPhone(f.phone), andarId: f.andarId, instaId: f.instaId || "" };
     if (!C.GAS_URL) return mockCheck(payload);
