@@ -3,7 +3,7 @@
   const app = document.getElementById("app");
 
   // 페이지 이동 간에 유지되는 입력 상태
-  const state = { selected: [], form: {}, agree: false, submitting: false, error: "", lastChosen: [], step: 1 };
+  const state = { selected: [], form: {}, submitting: false, error: "", lastChosen: [], step: 1 };
 
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const sessionId = (date, time, name) => `${date} ${time} ${name}`;
@@ -11,7 +11,6 @@
   const dow = (d) => { const [m, day] = d.split("/").map(Number); return DOW_NAMES[new Date(C.YEAR, m - 1, day).getDay()]; };
 
   const ICON = {
-    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
     check: '<svg viewBox="0 0 12 12" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.4l2.6 2.6L10 3.4"/></svg>',
     chevron: '<svg viewBox="0 0 14 9" fill="none"><path d="M1 1.5l6 6 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -81,18 +80,6 @@
         <div class="dd-list" role="listbox">${opts}</div>
       </div>
     </div>`;
-  }
-  // 동의 항목: 제목 + 내용 보기(원문 팝업) + 체크
-  function consent(name, title, doc, label) {
-    return `<div class="cons" data-field="${name}">
-      <div class="cons-h"><b>${title}</b><button type="button" class="chart-btn" data-doc="${doc}">내용 보기</button></div>
-      <label class="agree"><input type="checkbox" name="${name}" ${state[name] ? "checked" : ""} /><span class="box">${ICON.check}</span><span>${label}</span></label>
-    </div>`;
-  }
-
-  // 사이즈 드롭다운 + 사이즈표 확인 버튼
-  function sizeField(name, label, options) {
-    return selectField(name, label, options, `<button type="button" class="chart-btn" data-chart>* 사이즈표 확인</button>`);
   }
   function inputField(name, label, attrs) {
     return `<div class="f" data-field="${name}"><label>${label}</label><input class="in" name="${name}" value="${esc(state.form[name] || "")}" ${attrs || ""} /></div>`;
@@ -185,7 +172,7 @@
 
   function art(item, no) {
     const num = no ? `<span class="no">${String(no).padStart(2, "0")}</span>` : "";
-    return `<div class="art">${item.image ? `<img src="${esc(item.image)}" alt="${esc(item.title)}" />` : ""}${num}</div>`;
+    return `<div class="art">${item.image ? `<img src="${esc(item.image)}" alt="${esc(item.title)}" loading="lazy" decoding="async" />` : ""}${num}</div>`;
   }
 
   function Sessions() {
@@ -300,10 +287,8 @@
     document.querySelectorAll(".dd.open").forEach((d) => { if (d !== keepOpen) closeDropdown(d); });
     if (ddBtn) return toggleDropdown(ddBtn.closest(".dd"));
     if (opt) return selectOption(opt);
-    if (e.target.closest("[data-chart]")) return openChart();
     const doc = e.target.closest("[data-doc]");
     if (doc) return openDoc(doc.dataset.doc);
-    if (e.target.closest("[data-postcode]")) return openPostcode();
     if (e.target.id === "modal" || e.target.closest("[data-close]")) return closeModal();
     const stepBtn = e.target.closest("[data-step]");
     if (stepBtn) { readForm(); state.step = Number(stepBtn.dataset.step); state.error = ""; return route(); }
@@ -318,7 +303,7 @@
     if (tile) toggleSession(tile.dataset.session);
   });
 
-  // 사이즈표 팝업 (이미지는 config의 SIZE_CHART_IMAGE, 없으면 안내 문구)
+  // 팝업 (동의 원문 보기)
   function openModal(body, label, cls) {
     closeModal();
     // 닫기 버튼은 스크롤되는 내용 바깥(박스 오른쪽 위)에 두어 항상 보이게 한다
@@ -331,50 +316,11 @@
   }
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
 
-  function openChart() {
-    openModal(C.SIZE_CHART_IMAGE
-      ? `<img src="${esc(C.SIZE_CHART_IMAGE)}" alt="사이즈표" />`
-      : '<p class="empty">사이즈표는 10/7 확정 후 안내될 예정입니다.</p>', "사이즈표");
-  }
   // 동의 원문 팝업 (문구는 config의 CONSENT_DOCS)
   function openDoc(key) {
     const d = C.CONSENT_DOCS[key];
     if (!d) return;
     openModal(`<h3 class="doc-t">${esc(d.title)}</h3><div class="doc-b">${esc(d.text).replace(/\n/g, "<br />")}</div>`, d.title);
-  }
-
-  // 우편번호 검색 (카카오 우편번호 서비스)
-  let postcodeLoading;
-  function loadPostcode() {
-    if (window.daum && window.daum.Postcode) return Promise.resolve();
-    if (!postcodeLoading) {
-      postcodeLoading = new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
-        s.onload = resolve;
-        s.onerror = () => { postcodeLoading = null; reject(new Error("load")); };
-        document.head.appendChild(s);
-      });
-    }
-    return postcodeLoading;
-  }
-  function openPostcode() {
-    loadPostcode().then(() => {
-      openModal('<div id="postcode"></div>', "우편번호 검색", "pc");
-      new window.daum.Postcode({
-        width: "100%", height: "100%",
-        oncomplete: (d) => {
-          const f = document.getElementById("form");
-          if (!f) return;
-          f.elements.zip.value = d.zonecode;
-          f.elements.address.value = d.userSelectedType === "J" ? d.jibunAddress : d.roadAddress;
-          f.querySelectorAll('[data-field="zip"], [data-field="address"]').forEach((el) => el.classList.remove("err"));
-          readForm();
-          closeModal();
-          f.elements.addressDetail.focus();
-        },
-      }).embed(document.getElementById("postcode"));
-    }).catch(() => setMsg("주소 검색을 불러오지 못했어요. 잠시 후 다시 시도해주세요."));
   }
 
   function closeDropdown(dd) {
@@ -460,10 +406,8 @@
     const f = document.getElementById("form");
     if (!state.openedAt) state.openedAt = Date.now();
     f.addEventListener("submit", onSubmit);
-    let t;
-    const later = (e) => { if (["phone", "andarId", "instaId"].includes(e.target.name)) { clearTimeout(t); t = setTimeout(prefetchDup, e.type === "focusout" ? 0 : 700); } };
-    f.addEventListener("focusout", later);
-    f.addEventListener("input", later);
+    // 연락처·안다르 아이디 칸을 벗어날 때만 중복을 미리 확인한다 (입력 중에는 요청하지 않아 서버 부하를 줄인다)
+    f.addEventListener("focusout", (e) => { if (["phone", "andarId"].includes(e.target.name)) prefetchDup(); });
     f.addEventListener("change", (e) => { const c = e.target.closest(".cons"); if (c) c.classList.remove("err"); });
     f.addEventListener("input", (e) => {
       const fld = e.target.closest(".f");
@@ -491,9 +435,10 @@
       b.setAttribute("aria-pressed", String(on));
     });
   }
-  // 연락처·안다르 아이디·인스타 아이디 중복을 NEXT 시점에 미리 확인 (네트워크 오류 시에는 통과, 최종 제출에서 한 번 더 검사)
+  // 같은 연락처+안다르 아이디로 이미 신청했는지 NEXT 시점에 미리 확인 (네트워크 오류 시에는 통과).
+  // 한 항목만 겹치는 경우(연락처만, 인스타만 등)는 최종 제출에서 서버가 항목별로 걸러낸다.
   const dupCache = {};
-  const dupKey = (f) => [normPhone(f.phone || ""), f.andarId || "", f.instaId || ""].join("|");
+  const dupKey = (f) => [normPhone(f.phone || ""), f.andarId || ""].join("|");
   function checkDup() {
     const k = dupKey(state.form);
     if (!dupCache[k]) {
@@ -514,7 +459,7 @@
   }
   async function requestDup() {
     const f = state.form;
-    const payload = { action: "check", phone: normPhone(f.phone), andarId: f.andarId, instaId: f.instaId || "" };
+    const payload = { action: "check", phone: normPhone(f.phone), andarId: f.andarId };
     if (!C.GAS_URL) return mockCheck(payload);
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 10000);
@@ -527,11 +472,8 @@
   function mockCheck(p) {
     const list = JSON.parse(localStorage.getItem("mockApplications") || "[]");
     const n = (v) => String(v || "").trim().toLowerCase();
-    if (list.some((a) => a.phone === p.phone)) return { field: "phone", msg: "이미 신청된 연락처입니다." };
-    if (list.some((a) => n(a.andarId) === n(p.andarId))) return { field: "andarId", msg: "이미 신청된 안다르 아이디입니다." };
-    const ni = n(p.instaId).replace(/^@/, "");
-    if (ni && list.some((a) => n(a.instaId).replace(/^@/, "") === ni)) return { field: "instaId", msg: "이미 신청된 인스타 아이디입니다." };
-    return null;
+    const same = list.some((a) => a.phone === p.phone && n(a.andarId) === n(p.andarId));
+    return same ? { field: "phone", msg: "이미 신청하신 연락처와 안다르 아이디입니다." } : null;
   }
   // NEXT: 중복 확인 결과가 이미 와 있으면 바로 진행하고, 아직이면 버튼에 "확인 중"을 보여 주며 기다린다.
   // (입력하는 동안 미리 확인을 시작해 두므로 대부분은 기다리지 않는다)

@@ -51,6 +51,26 @@ function findDup(sheet, phone, andarId, insta) {
   return null;
 }
 
+// 1단계 사전 확인용: 연락처와 안다르 아이디가 같은 행에서 함께 일치할 때만 중복으로 본다.
+// (한 항목만으로 응답하면 아무 연락처나 넣어 신청 여부를 알아낼 수 있으므로. 한 항목만 겹치는 경우는 최종 신청에서 걸러진다)
+function findSamePerson(sheet, phone, andarId) {
+  var n = sheet.getLastRow() - 1;
+  if (n < 1 || !phone || !norm(andarId)) return false;
+  var ids = sheet.getRange(2, COL.phone, n, COL.andarId - COL.phone + 1).getValues();
+  var nId = norm(andarId);
+  for (var r = 0; r < n; r++) {
+    if (String(ids[r][0]).replace(/\D/g, "") === phone && norm(ids[r][COL.andarId - COL.phone]) === nId) return true;
+  }
+  return false;
+}
+
+// 내부 오류 내용은 실행 로그(Apps Script > 실행)에만 남기고, 응답에는 일반 문구만 보낸다.
+// "서버 오류"로 시작해야 사이트가 일시적 오류로 보고 자동 재시도한다.
+function serverError(err) {
+  console.error(err && err.stack ? err.stack : err);
+  return out({ ok: false, error: "서버 오류: 잠시 후 다시 시도해주세요." });
+}
+
 function doPost(e) {
   var d;
   try { d = JSON.parse(e.postData.contents); } catch (err) { d = null; }
@@ -60,9 +80,9 @@ function doPost(e) {
   if (d.action === "check") {
     try {
       if (new Date() >= DEADLINE) return out({ ok: false, error: "클래스 신청이 마감되었습니다." });
-      var dup0 = findDup(getSheet(), String(d.phone || "").replace(/\D/g, ""), d.andarId, d.instaId ? String(d.instaId).trim() : "");
-      return out(dup0 ? { ok: false, field: dup0.field, error: dup0.error } : { ok: true });
-    } catch (err) { return out({ ok: false, error: "서버 오류: " + err }); }
+      var same = findSamePerson(getSheet(), String(d.phone || "").replace(/\D/g, ""), d.andarId);
+      return out(same ? { ok: false, field: "phone", error: "이미 신청하신 연락처와 안다르 아이디입니다." } : { ok: true });
+    } catch (err) { return serverError(err); }
   }
 
   // 봇 의심(허니팟 입력·너무 빠른 제출)은 저장하지 않고 성공처럼 응답
@@ -77,7 +97,7 @@ function doPost(e) {
   try {
     lock.waitLock(20000); // 오픈 직후 동시 접수 대비
   } catch (err) {
-    return out({ ok: false, error: "서버 오류: 잠금 대기 초과" }); // 사이트가 자동 재시도한다
+    return serverError(err); // 잠금 대기 초과 — 사이트가 자동 재시도한다
   }
   try {
     var sheet = getSheet();
@@ -91,7 +111,7 @@ function doPost(e) {
     SpreadsheetApp.flush();
     return out({ ok: true });
   } catch (err) {
-    return out({ ok: false, error: "서버 오류: " + err });
+    return serverError(err);
   } finally {
     lock.releaseLock();
   }

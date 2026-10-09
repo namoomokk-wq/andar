@@ -13,9 +13,6 @@ window.APP_CONFIG = {
   // 1P 행사 정보
   EVENT: { period: "2026.10.24(토) ~ 2026.10.25(일)", place: "Y173 - 성수동 연무장17길 3", periodShort: "2026.10.24(토) - 10.25(일)", address: "서울 성동구 연무장길 17길 3, Y173" },
 
-  // 사이즈표 이미지 경로 (10/7 확정 전달 예정). 비워두면 안내 문구가 표시됩니다.
-  SIZE_CHART_IMAGE: "",
-
   // ※ MAX_SESSIONS / DEADLINE / DATES / SCHEDULE / SIZES를 바꾸면 `node gas/sync.js` 실행 후 Code.gs를 재배포해야 합니다.
 
   // 시간표: 행 = 시간대, 열 = 날짜. 각 셀은 세션명. 요일은 YEAR와 날짜로 자동 계산됩니다.
