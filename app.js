@@ -16,7 +16,7 @@
     check: '<svg viewBox="0 0 12 12" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.4l2.6 2.6L10 3.4"/></svg>',
     chevron: '<svg viewBox="0 0 14 9" fill="none"><path d="M1 1.5l6 6 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
-  const mesh = () => '<div class="mesh kv"><img src="assets/keyvisual.png" alt="" /></div><div class="grain"></div>';
+  const mesh = () => '<div class="mesh kv"><img src="assets/keyvisual.jpg" alt="" /></div><div class="grain"></div>';
 
   // ---------- pages ----------
   // 1P: 링크로 처음 들어왔을 때 잠깐 보였다가 서서히 사라지는 인트로 (아래에 2P가 미리 그려져 있음)
@@ -36,7 +36,7 @@
         </div>
       </section>`;
   }
-  const SPLASH_MS = 2000; // 인트로 최소 표시 시간 (이후 서서히 사라짐, 탭하면 바로 넘어감)
+  const SPLASH_MS = 900; // 인트로 최소 표시 시간 (이후 서서히 사라짐, 탭하면 바로 넘어감)
   function showSplash() {
     const el = document.createElement("div");
     el.className = "splash";
@@ -50,7 +50,7 @@
       gone = true;
       el.classList.add("out");
       document.documentElement.classList.remove("splash-on");
-      setTimeout(() => el.remove(), 1000);
+      setTimeout(() => el.remove(), 700);
     };
     el.addEventListener("click", () => { skip = true; if (ready) hide(); });
     // 아래 페이지가 준비되면 호출: 최소 표시 시간을 채운 뒤 사라진다
@@ -672,11 +672,13 @@
     }, 700));
   }
 
-  // 첫 화면(링크 접속)이면 인트로를 바로 띄우고, 그동안 서버 시계 보정·2P 렌더링을 마친다 (마감 후에는 생략)
+  // 첫 화면(링크 접속)이면 인트로를 바로 띄운다 (마감 후에는 생략)
+  // 페이지는 기기 시계로 바로 그리고, 서버 시계 보정은 뒤에서 마친 뒤 마감 여부가 달라졌을 때만 다시 그린다
   const splashDone = currentPath() === "/" && !isClosed() ? showSplash() : null;
+  route();
+  if (splashDone) splashDone();
   syncClock().then(() => {
-    route();
-    if (splashDone) splashDone();
+    if (isClosed() !== !!document.querySelector(".closed")) route();
     // 페이지를 열어 둔 채 마감 시각이 지나면 종료 화면으로 전환
     setInterval(() => { if (isClosed() && !document.querySelector(".closed")) route(); }, 15000);
   });
