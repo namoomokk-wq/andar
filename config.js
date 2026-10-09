@@ -1,7 +1,7 @@
 // 서비스 설정값 — 실제 자료 수령 후 여기만 수정하면 됩니다.
 window.APP_CONFIG = {
   // Google Apps Script 웹앱 URL (gas/README.md 참고). 비워두면 mock 모드(브라우저 localStorage에 저장)로 동작합니다.
-  GAS_URL: "https://script.google.com/macros/s/AKfycbx2RQH5wUdVntvJ90_JOR0cj7zipCCYG7UABcnXa46NkVQQh0NIpLUNDo0wjgelnu6V/exec",
+  GAS_URL: "https://script.google.com/macros/s/AKfycbyO-Dy0yDqlmeddPecLY282XrCAH4SDUElwa5KW6MlxzMrucCj4I8OPTrA6pbImtANHJA/exec",
 
   // 신청 마감: 10/14(수) 24:00 = 10/15 00:00 (KST). 이후 종료 페이지 → TAKEDOWN 이후 배포 내림(404)
   DEADLINE: "2026-10-15T00:00:00+09:00",
