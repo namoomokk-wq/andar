@@ -417,7 +417,10 @@
     const f = document.getElementById("form");
     if (!state.openedAt) state.openedAt = Date.now();
     f.addEventListener("submit", onSubmit);
-    f.addEventListener("focusout", (e) => { if (["phone", "andarId", "instaId"].includes(e.target.name)) prefetchDup(); });
+    let t;
+    const later = (e) => { if (["phone", "andarId", "instaId"].includes(e.target.name)) { clearTimeout(t); t = setTimeout(prefetchDup, e.type === "focusout" ? 0 : 700); } };
+    f.addEventListener("focusout", later);
+    f.addEventListener("input", later);
     f.addEventListener("change", (e) => { const c = e.target.closest(".cons"); if (c) c.classList.remove("err"); });
     f.addEventListener("input", (e) => {
       const fld = e.target.closest(".f");
@@ -449,9 +452,12 @@
   const dupCache = {};
   const dupKey = (f) => [normPhone(f.phone || ""), f.andarId || "", f.instaId || ""].join("|");
   function checkDup() {
-    const f = state.form;
-    const k = dupKey(f);
-    if (!dupCache[k]) dupCache[k] = requestDup();
+    const k = dupKey(state.form);
+    if (!dupCache[k]) {
+      const e = { done: false, val: null };
+      e.p = requestDup().then((v) => { e.done = true; e.val = v; return v; });
+      dupCache[k] = e;
+    }
     return dupCache[k];
   }
   // 입력을 마치고 칸을 벗어나는 순간 미리 확인해 두면 NEXT에서는 기다릴 필요가 거의 없다
@@ -484,19 +490,24 @@
     if (ni && list.some((a) => n(a.instaId).replace(/^@/, "") === ni)) return { field: "instaId", msg: "이미 신청된 인스타 아이디입니다." };
     return null;
   }
-  let checking = false;
+  // NEXT: 중복 확인 결과가 이미 와 있으면 바로 진행하고, 아직이면 버튼에 "확인 중"을 보여 주며 기다린다.
+  // (입력하는 동안 미리 확인을 시작해 두므로 대부분은 기다리지 않는다)
+  let waiting = false;
   async function goNext() {
-    if (checking) return;
+    if (waiting) return;
     readForm();
     const v = validateStep1();
     if (v) return showError(v);
-    checking = true;
-    const btn = document.getElementById("next");
-    if (btn) btn.disabled = true;
-    setMsg("확인 중이에요...", true);
-    const dup = await checkDup();
-    checking = false;
-    if (dup) { if (btn) btn.disabled = false; return showError(dup); }
+    const entry = checkDup();
+    if (!entry.done) {
+      waiting = true;
+      const btn = document.getElementById("next");
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span><span>확인 중...</span>'; }
+      await entry.p;
+      waiting = false;
+      if (btn) { btn.disabled = false; btn.innerHTML = "<span>NEXT</span>"; }
+    }
+    if (entry.val) return showError(entry.val);
     setMsg("");
     state.step = 2;
     route();
